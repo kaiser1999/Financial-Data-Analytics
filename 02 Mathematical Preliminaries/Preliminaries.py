@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 np.set_printoptions(precision=4) # control display into 4 digis
 
-HSI_2002 = pd.read_csv("Financial ratio_2002.csv")
+HSI_2002 = pd.read_csv("fin-ratio.csv")
 print(HSI_2002.columns.values)
 
 X_2002 = HSI_2002.drop(columns="HSI").values # A 680x6 data matrix

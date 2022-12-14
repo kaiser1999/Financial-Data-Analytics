@@ -2,7 +2,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 options(digits=4) # Control display into 4 digits
 
-HSI_2002 <- read.csv("Financial ratio_2002.csv")
+HSI_2002 <- read.csv("fin-ratio.csv")
 names(HSI_2002)
 
 X_2002 <- HSI_2002[,1:6] # A 680x6 data matrix

@@ -151,7 +151,7 @@ legend("topleft", c("PCA long", "PCA short", "S&P500"),
 axis(side=1, plot_date , format(plot_date , "%d-%m-%y"), cex.axis=1)
 
 ################################################################################
-d <- read.csv("Financial ratio_2002.csv")  # read in dataset
+d <- read.csv("fin-ratio.csv")  # read in dataset
 # standardize the data so the columns of large loadings 
 # will not dominate the data
 d_scale <- scale(d[1:5])
