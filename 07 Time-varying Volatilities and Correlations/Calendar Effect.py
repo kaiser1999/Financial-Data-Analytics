@@ -83,4 +83,5 @@ for (rect1, rect2) in zip(rects1, rects2):
     ax.text(xtick + width/2, 0.5*height2+height1, f'{height2*100:.2f}%',
             rotation=30, ha='center', va='center', fontsize=15)
 
-fig.savefig(f"Calendar effect_{index_name}.png", dpi=200)
+fig.tight_layout()
+fig.savefig(f"../Picture/Calendar effect_{index_name}.png", dpi=200)
