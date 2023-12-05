@@ -1,6 +1,6 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-d <- read.csv("stock_1999_2002.csv") # read in data file
+d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
 d <- as.ts(d)
 return <- (lag(d) - d)/d
 colnames(return) <- paste0(colnames(d), "_Return")
@@ -30,6 +30,31 @@ N_cop_dist <- mvdc(copula=N.cop, margins=rep("norm", ncol(d)),
 set.seed(4002)
 return_sim_N <- rMvdc(n_sim, N_cop_dist)
 pairs(rbind(return, return_sim_N), col=c("orange","blue"))
+
+######################################################################
+Empirical_QQ_Plot <- function(sim_data, returns, col=c()){
+  n_stocks <- ncol(returns); n_days <- nrow(returns)
+  if (length(col) == 0) col <- rep("black", n_stocks)
+  
+  par(mfrow=c(1, n_stocks))
+  for (k in 1:n_stocks){
+    sim_data_k <- sim_data[,k]; returns_k <- returns[,k]
+    i <- ((1:n_days) - 0.5) / n_days
+    q <- quantile(ecdf(sim_data_k), probs=i)
+    
+    qqplot(q, sort(returns_k), xlab="Empirical quantiles",
+           ylab="Returns quantiles", col=col[k],
+           main=paste(colnames(returns)[k], "Empirical Q-Q Plot"))
+    abline(lsfit(q, sort(returns_k)))
+  }
+}
+
+total_sim <- 1e4; col <- c("blue", "orange", "green")
+
+######################################################################
+set.seed(4002)
+sim_N <- rMvdc(total_sim, N_cop_dist)
+Empirical_QQ_Plot(sim_N, return, col=col)
 
 ######################################################################
 
@@ -65,3 +90,8 @@ set.seed(4002)
 return_sim_t <- rMvdc(n_sim, t_cop_dist)
 
 pairs(rbind(return, return_sim_t), col=c("orange","blue"))
+
+######################################################################
+set.seed(4002)
+sim_t <- rMvdc(total_sim, t_cop_dist)
+Empirical_QQ_Plot(sim_t, return, col=col)
