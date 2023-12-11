@@ -1,12 +1,13 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-d <- read.csv("stock_1999_2002.csv")	  # read in data file
+d <- read.csv("stock_1999_2002 (no date).csv")	  # read in data file
 d <- as.ts(d)
 u <- (lag(d) - d) / d
 colnames(u) <- colnames(d)
 
-plot(d, plot.type="multiple", col="blue")	# plot d
-plot(u, plot.type="multiple", col="blue")	# plot u
+library(zoo)
+plot(zoo(d), plot.type="multiple", col=c("blue", "orange", "green"))
+plot(zoo(u), plot.type="multiple", col=c("blue", "orange", "green"))
 
 par(mfrow=c(3,2), mar=c(4,4,4,4))
 # if the dist is normal, the plot should close to this line
@@ -63,8 +64,8 @@ QQt.plot <- function(u, comp=""){
   s <- sd(z)*sqrt((n-1)/n)	# Population standard deviation
   ku <- sum(z^4)/(n*s^4) - 3	# Excess kurtosis
   nu <- 6/ku + 4 # Degrees of freedom
-  i <- ((1:n)-0.5)/n  # create a vector of percentile
-  q <- qt(i, nu)		  # percentile point from t(v)
+  i <- ((1:n)-0.5)/n  # create a vector of percentiles
+  q <- qt(i, nu)		  # percentile points from t(v)
 
   plot(q, sz, main=paste("Self-defined t Q-Q Plot of ", comp, " Return"))
   abline(lsfit(q, sz))

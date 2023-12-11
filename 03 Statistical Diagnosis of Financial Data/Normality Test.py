@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-d = pd.read_csv("stock_1999_2002.csv")
+d = pd.read_csv("stock_1999_2002 (no date).csv")
 u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
 
 d.plot(subplots=True, layout=(3,1), figsize=(10, 10))
@@ -28,6 +28,7 @@ stats.probplot(u.CK, dist="norm", plot=axs[2,1])
 axs[2,1].set_title("Normal Q-Q Plot of CK Return")
 axs[2,1].get_lines()[0].set_color('green')
 fig.tight_layout()
+fig.savefig("../Picture/Stock Normality Plot.png", dpi=200)
 
 #%%
 
@@ -67,14 +68,14 @@ print(JB_test(u.CK))
 #%%
 
 def QQt_plot(u, color="blue", comp="", ax=None):
-    z = u - np.mean(u)  # Remove mean
-    sz = np.sort(z) # Sort z
-    n = len(z) # Sample size
-    s = np.std(z) # Population standard deviation
-    ku = sum(z**4) / (n*s**4) - 3 # Excess Kurtosis
-    nu = 6/ku + 4 # degrees of freedom
-    i = (np.arange(1, n+1)-0.5)/n # create a vector of percentile
-    q = stats.t.ppf(i, nu)
+    z = u - np.mean(u)              # Remove mean
+    sz = np.sort(z)                 # Sort z
+    n = len(z)                      # Sample size
+    s = np.std(z)                   # Population standard deviation
+    ku = sum(z**4) / (n*s**4) - 3   # Excess Kurtosis
+    nu = 6/ku + 4                   # degrees of freedom
+    i = (np.arange(1, n+1)-0.5)/n   # create a vector of percentiles
+    q = stats.t.ppf(i, nu)          # percentile points from t(v)
     
     b, w = np.linalg.lstsq(np.vstack([np.ones(n), q]).T, sz, 
                            rcond=None)[0]
@@ -99,6 +100,7 @@ stats.probplot(u.CK, dist="t", sparams=df_CK, plot=axs[2,1])
 axs[2,1].set_title("t Q-Q Plot of CK Return")
 axs[2,1].get_lines()[0].set_color('green')
 fig.tight_layout()
+fig.savefig("../Picture/Stock t Plot.png", dpi=200)
 
 #%%
 print([df_HSBC, df_CLP, df_CK])
@@ -110,7 +112,7 @@ print(stats.kstest(u.CK, stats.t.cdf, args=(df_CK,)))
 #%%
 n = 180
 u_180 = u.iloc[len(u)-n:, :]
-mu_180 = np.mean(u_180)
+mu_180 = np.mean(u_180)         # pandas = np.mean(u_180, axis=0)
 S_180 = np.cov(u_180, rowvar=False)
 
 z_180 = (u_180 - mu_180).values.reshape(n, -1)
@@ -130,6 +132,9 @@ plt.scatter(q, sd2_180, color="blue")
 plt.plot(q, w*q + b, color="blue")
 plt.title("Chi2 Q-Q Plot")
 
+plt.tight_layout()
+plt.savefig("../Picture/Stock Chi2 Plot.png", dpi=200)
+
 print(stats.kstest(d2_180, stats.chi2.cdf, args=(3,)))
 
 #%%
@@ -144,6 +149,7 @@ new_labels = [round(float(i.get_text()), 2) for i in
               axes[0,0].get_yticklabels()]
 axes[0,0].set_yticklabels(new_labels)
 plt.tight_layout()
+fig.savefig("../Picture/Stock scatter matrix.png", dpi=200)
 
 #%%
 
@@ -178,6 +184,7 @@ axs[2,2].set_title("1-day Lagged Plot of CK Price")
 pd.plotting.lag_plot(u.CK, lag=1, ax=axs[3,2], c="green")
 axs[3,2].set_title("1-day Lagged Plot of CK Return")
 plt.tight_layout()
+fig.savefig("../Picture/Stock Price Normality Plot.png", dpi=200)
 
 #%%
 
@@ -194,6 +201,8 @@ plot_acf(u.CLP**2, alpha=None, c="orange", title="ACF Plot of Squared CLP Return
 plot_acf(d.CK, alpha=None, c="green", title="ACF Plot of CK Price", ax=axs[0,2])
 plot_acf(u.CK, alpha=None, c="green", title="ACF Plot of CK Return", ax=axs[1,2])
 plot_acf(u.CK**2, alpha=None, c="green", title="ACF Plot of Squared CK Return", ax=axs[2,2])
+plt.tight_layout()
+fig.savefig("../Picture/Stock ACF Plot.png", dpi=200)
 
 #%%
 np.random.seed(4012)
@@ -209,9 +218,11 @@ for i in range(90):
     s_pred.append(s1.values)
     s0 = s1
 
-df_pred = pd.DataFrame(np.array(s_pred), columns=d.columns.values + "_pred")
+df_pred = pd.DataFrame(np.array(s_pred), 
+                       columns=d.columns.values + "_pred")
 df_pred.index = np.arange(len(d)+1, len(d)+90+1)
 
 pd.merge(d, df_pred, how='outer', left_index=True, 
          right_index=True).plot(figsize=(10, 7))
-
+plt.tight_layout()
+plt.savefig("../Picture/Stock Prediction.png", dpi=200)
