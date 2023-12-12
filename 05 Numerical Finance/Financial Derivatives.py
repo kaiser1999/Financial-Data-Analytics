@@ -4,12 +4,6 @@ from scipy.stats import norm
 
 # Initialize variables
 S_0 = 10; q = 0; sigma = 0.7; r = 0; T = 1; K = 8; h = 0.3
-params = {"loc": (r-q-sigma**2/2)*T, "scale": sigma*np.sqrt(T)}
-params_minus_h = {"loc": (r-q-(sigma-h)**2/2)*T, 
-                  "scale": (sigma-h)*np.sqrt(T)}
-params_plus_h  = {"loc": (r-q-(sigma+h)**2/2)*T, 
-                 "scale": (sigma+h)*np.sqrt(T)}
-discount = np.exp(-r * T)
 
 # Compute the exact Delta
 d_plus = (np.log(S_0/K) + (r-q+sigma**2/2)*T) / (sigma*np.sqrt(T))
@@ -27,28 +21,28 @@ results = pd.DataFrame(columns=["h", "n", "delta",
                                 "est_central_delta",
                                 "vega", "est_forward_vega", 
                                 "est_central_vega"])
+
+def sim_call(n, S_0, q, sigma, r, T, K):
+    # Generate the Black-Scholes sample
+    S_T = S_0 * np.exp(norm.rvs(loc=(r-q-sigma**2/2)*T, 
+                                scale=sigma*np.sqrt(T), size=int(n)))
+    return np.exp(-r * T) * np.mean(np.maximum(S_T - K, 0))
+
 n_size = [1e6, 1e8]
 # Estimate Delta by forward and central difference with different n
 for n in n_size:
-    # Generate the Black-Scholes sample
-    S_T = S_0 * np.exp(norm.rvs(**params, size=int(n)))
-    Y_bar_S0 = discount * np.mean(np.maximum(S_T - K, 0))
+    Y_bar_S0 = sim_call(n, S_0, q, sigma, r, T, K)
     
     # Estimate delta using forward and central difference method
-    S_T_minus_h = (S_0 - h) * np.exp(norm.rvs(**params, size=int(n)))
-    Y_bar_S0_minus_h = discount * np.mean(np.maximum(S_T_minus_h-K, 0))
-    S_T_plus_h = (S_0 + h) * np.exp(norm.rvs(**params, size=int(n)))
-    Y_bar_S0_plus_h = discount * np.mean(np.maximum(S_T_plus_h - K, 0))
+    Y_bar_S0_minus_h = sim_call(n, S_0-h, q, sigma, r, T, K)
+    Y_bar_S0_plus_h = sim_call(n, S_0+h, q, sigma, r, T, K)
     
     est_forward_delta = (Y_bar_S0_plus_h - Y_bar_S0) / h
     est_central_delta = (Y_bar_S0_plus_h - Y_bar_S0_minus_h) / (2*h)
     
     # Estimate vega using forward and central difference method
-    Y_T_minus_h = S_0 * np.exp(norm.rvs(**params_minus_h, size=int(n)))
-    Y_bar_sigma_minus_h = discount*np.mean(np.maximum(Y_T_minus_h-K,0))
-    
-    Y_T_plus_h = S_0 * np.exp(norm.rvs(**params_plus_h, size=int(n)))
-    Y_bar_sigma_plus_h = discount * np.mean(np.maximum(Y_T_plus_h-K,0))
+    Y_bar_sigma_minus_h = sim_call(n, S_0, q, sigma-h, r, T, K)
+    Y_bar_sigma_plus_h = sim_call(n, S_0, q, sigma+h, r, T, K)
     
     est_forward_vega = (Y_bar_sigma_plus_h - Y_bar_S0) / h
     est_central_vega = (Y_bar_sigma_plus_h - Y_bar_sigma_minus_h)/(2*h)
@@ -80,6 +74,8 @@ np.random.seed(4012)
 n_size = np.arange(400, 30000, 400)
 est_pathwise_delta, est_pathwise_vega = [], []
 est_lr_delta, est_lr_vega = [], []
+params = {"loc": (r-q-sigma**2/2)*T, "scale": sigma*np.sqrt(T)}
+discount = np.exp(-r * T)
 
 # Estimate Delta by pathwise method with different n
 for i in range(len(n_size)):

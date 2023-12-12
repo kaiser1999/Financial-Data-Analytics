@@ -112,7 +112,7 @@ print(stats.kstest(u.CK, stats.t.cdf, args=(df_CK,)))
 #%%
 n = 180
 u_180 = u.iloc[len(u)-n:, :]
-mu_180 = np.mean(u_180)         # pandas = np.mean(u_180, axis=0)
+mu_180 = np.mean(u_180, axis=0)
 S_180 = np.cov(u_180, rowvar=False)
 
 z_180 = (u_180 - mu_180).values.reshape(n, -1)
@@ -121,11 +121,7 @@ sd2_180 = np.sort(d2_180)
 i = (np.arange(1, n+1)-0.5)/n
 q = stats.chi2.ppf(i, 3)
 
-print(mu_180)
-print(z_180)
-print(d2_180)
-
-fig = plt.figure()
+fig = plt.figure(figsize=(10, 10))
 b, w = np.linalg.lstsq(np.vstack([np.ones(n), q]).T, sd2_180, 
                        rcond=None)[0]
 plt.scatter(q, sd2_180, color="blue")
@@ -142,6 +138,7 @@ print(stats.kstest(d2_180, stats.chi2.cdf, args=(3,)))
 print(np.corrcoef(u_180, rowvar=False))
 
 #%%
+fig = plt.figure(figsize=(10, 10))
 hist_kwds = {'color':'blue', 'bins':'sturges', 'ec':'black'}
 axes = pd.plotting.scatter_matrix(u, figsize=(10,10), color="blue",
                                   hist_kwds=hist_kwds)

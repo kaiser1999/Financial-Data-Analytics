@@ -15,7 +15,6 @@ par(mfrow=c(3,2), mar=c(4,4,4,4))
 hist(u[,"HSBC"]); qqnorm(u[,"HSBC"]); qqline(u[,"HSBC"])
 hist(u[,"CLP"]); qqnorm(u[,"CLP"]); qqline(u[,"CLP"])
 hist(u[,"CK"]); qqnorm(u[,"CK"]); qqline(u[,"CK"])
-
 ############################################################
 
 shapiro.test(u[,"HSBC"])
@@ -68,10 +67,10 @@ QQt.plot <- function(u, comp=""){
   q <- qt(i, nu)		  # percentile points from t(v)
 
   plot(q, sz, main=paste("Self-defined t Q-Q Plot of ", comp, " Return"))
-  abline(lsfit(q, sz))
-  qqPlot(z, distribution="t", df=nu, envelope=FALSE, line="none", cex=1.2,
-         grid=FALSE, main=paste("t Q-Q Plot of ", comp, " Return"))
-  abline(lsfit(q, sz))
+  qqline(sz, distribution=function(p) qt(p, df=nu), probs=c(0.25, 0.75))
+  qqPlot(z, distribution="t", df=nu, envelope=FALSE, line="quartiles",
+         col.lines="black", lwd=1, cex=1, grid=FALSE, id=FALSE,
+         main=paste("t Q-Q Plot of ", comp, " Return"))
   nu
 }
 
@@ -101,7 +100,7 @@ q <- qchisq(i,3)		# compute quantiles
 
 par(mfrow=c(1,1))
 qqplot(q, sd2_180, main="Chi2 Q-Q Plot")		# QQ-chisquare plot
-abline(lsfit(q, sd2_180))	
+qqline(sd2_180, distribution=function(p) qchisq(p, df=3))
 
 ############################################################
 

@@ -1,9 +1,5 @@
 # Initialize variables
 S_0 <- 10; q <- 0; sigma <- 0.7; r <- 0; T <- 1; K <- 8; h <- 0.3
-params <- list(mean=(r-q-sigma^2/2)*T, sd=sigma*sqrt(T))
-params_minus_h<-list(mean=(r-q-(sigma-h)^2/2)*T,sd=(sigma-h)*sqrt(T))
-params_plus_h <-list(mean=(r-q-(sigma+h)^2/2)*T,sd=(sigma+h)*sqrt(T))
-discount <- exp(-r * T)
 
 # Compute the exact Delta and Vega
 d_plus <- (log(S_0/K) + (r-q+sigma^2/2)*T) / (sigma*sqrt(T))
@@ -20,31 +16,31 @@ results <- data.frame(n=numeric(0), exact_delta=numeric(0),
                       est_delta_central=numeric(0), 
                       est_vega_central=numeric(0))
 
+sim_call <- function(n, S_0, q, sigma, r, T, K){
+  # Generate the Black-Scholes sample
+  S_T <- S_0 * exp(do.call(rnorm, c(n, list(mean=(r-q-sigma^2/2)*T, 
+                                            sd=sigma*sqrt(T)))))
+  return (exp(-r * T) * mean(pmax(S_T - K, 0)))
+}
+
 n_size <- c(1e6, 1e8)
 # Estimate Delta and Vega using forward and central difference 
 # with different n
 for (n in n_size) {
-  # Generate the Black-Scholes sample
-  S_T <- S_0 * exp(do.call(rnorm, c(n, params)))
+  Y_bar <- sim_call(n, S_0, q, sigma, r, T, K)
   
   # Estimate Delta using forward and central difference method
-  Y_bar_S0 <- discount * mean(pmax(S_T - K, 0))
-  S_T_minus_h <- (S_0 - h) * exp(do.call(rnorm, c(n, params)))
-  Y_bar_S0_minus_h <- discount * mean(pmax(S_T_minus_h - K, 0))
-  S_T_plus_h <- (S_0 + h) * exp(do.call(rnorm, c(n, params)))
-  Y_bar_S0_plus_h <- discount * mean(pmax(S_T_plus_h - K, 0))
+  Y_bar_S0_minus_h <- sim_call(n, S_0-h, q, sigma, r, T, K)
+  Y_bar_S0_plus_h <- sim_call(n, S_0+h, q, sigma, r, T, K)
   
-  est_delta_forward <- (Y_bar_S0_plus_h - Y_bar_S0) / h
+  est_delta_forward <- (Y_bar_S0_plus_h - Y_bar) / h
   est_delta_central<- (Y_bar_S0_plus_h - Y_bar_S0_minus_h) / (2*h)
   
   # Estimate Vega using forward and central difference method
-  Y_bar_sigma <- Y_bar_S0
-  S_T_minus_h <- S_0  * exp(do.call(rnorm, c(n, params_minus_h)))
-  Y_bar_sigma_minus_h <- discount * mean(pmax(S_T_minus_h - K, 0))
-  S_T_plus_h <- S_0  * exp(do.call(rnorm, c(n, params_plus_h)))
-  Y_bar_sigma_plus_h <- discount * mean(pmax(S_T_plus_h - K, 0))
+  Y_bar_sigma_minus_h <- sim_call(n, S_0, q, sigma-h, r, T, K)
+  Y_bar_sigma_plus_h <- sim_call(n, S_0, q, sigma+h, r, T, K)
   
-  est_vega_forward <- (Y_bar_sigma_plus_h - Y_bar_sigma)/h
+  est_vega_forward <- (Y_bar_sigma_plus_h - Y_bar)/h
   est_vega_central<- (Y_bar_sigma_plus_h - Y_bar_sigma_minus_h)/(2*h)
   
   # Store the results in the data frame
@@ -78,6 +74,8 @@ set.seed(4002)
 n_size <- seq(400, 30000, by=400)
 est_delta_pathwise <- c(); est_vega_pathwise <- c()
 est_delta_lr <- c(); est_vega_lr <- c()
+params <- list(mean=(r-q-sigma^2/2)*T, sd=sigma*sqrt(T))
+discount <- exp(-r * T)
 
 # Estimate Delta using pathwise method with different n
 for (i in 1:length(n_size)) {

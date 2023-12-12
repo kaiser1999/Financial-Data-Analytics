@@ -52,8 +52,7 @@ print(VaR_GARCH)
 
 #%%
 
-from scipy.optimize import minimize
-from scipy.optimize import Bounds
+from scipy.optimize import minimize, Bounds
 
 # set lower and upper bounds for omega, alpha, beta
 bds = Bounds(lb=[1e-15, 1e-15, 1e-15], ub=[1-1e-15, 1-1e-15, 1-1e-15])
@@ -198,7 +197,8 @@ plt.text(-VaR_N, 15, "-VaR_N", ha='center', fontsize="small")
 plt.text(-VaR_t, 8, "-VaR_t", ha='center', fontsize="small")
 plt.text(-VaR_EVT, 15, "-VaR_EVT", ha='center', fontsize="small")
 
-plt.savefig("Backtesting VaR.png", dpi=200)
+plt.tight_layout()
+plt.savefig("../Picture/Backtesting VaR.png", dpi=200)
 
 #%%
 
