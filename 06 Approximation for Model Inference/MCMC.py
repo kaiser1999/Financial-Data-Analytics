@@ -109,7 +109,7 @@ class MCMC_logistic:
 #%%
 import pandas as pd
 
-df = pd.read_csv("fin-ratio.csv")
+df = pd.read_csv("../Datasets/fin-ratio.csv")
 X, y = df.drop(columns=["HSI"]).values, df.HSI.values
 
 MCMC_model = MCMC_logistic(num_it=5e5)

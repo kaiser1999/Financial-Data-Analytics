@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################
-df <- read.csv('Mroz.csv')  # read the dataset
+df <- read.csv('../Datasets/Mroz.csv')  # read the dataset
 
 # create a new feature: number of children under 18
 df$child <- df$child6 + df$child618

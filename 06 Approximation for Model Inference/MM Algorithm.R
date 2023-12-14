@@ -21,7 +21,7 @@ MM_quantile(x, q)
 # same as Risk_Measure.R
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 d <- as.ts(d)
 
 x_n <- as.vector(d[nrow(d),]) # select the last obs

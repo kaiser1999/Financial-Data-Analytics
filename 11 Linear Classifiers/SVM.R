@@ -2,7 +2,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################
-d <- read.csv("fin-ratio.csv")      # read in dataset
+d <- read.csv("../Datasets/fin-ratio.csv")      # read in dataset
 # define HSI as a factor instead of a number for svm
 d$HSI <- factor(d$HSI, levels=c(0,1))
 

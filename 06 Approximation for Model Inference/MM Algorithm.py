@@ -23,7 +23,7 @@ print(MM_quantile(x, q))
 import pandas as pd
 import numpy as np
 
-d = pd.read_csv("stock_1999_2002.csv", index_col=0)
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 
 x_n = d.iloc[-1,:]           # select the last obs
 w = [40000, 30000, 30000]    # investment amount on each stock

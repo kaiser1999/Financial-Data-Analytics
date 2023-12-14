@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-d = pd.read_csv("stock_1999_2002.csv", index_col=0)
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 
 x_n = d.iloc[-1,:]           # select the last obs
 w = [40000, 30000, 30000]    # investment amount on each stock
@@ -19,7 +19,7 @@ print(VaR_sim)
 
 from arch import arch_model
 
-d = pd.read_csv("stock_1999_2002.csv", index_col=0) # read in data file
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0) # read in data file
 t = d["HSBC"]               # select HSBC
 n = len(d)		            # no. of obs
 x_n = t.iloc[-1]            # select the last obs
@@ -69,7 +69,7 @@ def GARCH_11(x, r):
         log_like -= 1/2*(np.log(2*np.pi) + np.log(nu) + r[i]**2/nu)
     return -log_like
 
-d = pd.read_csv("stock_1999_2002.csv") # read in data file
+d = pd.read_csv("../Datasets/stock_1999_2002.csv") # read in data file
 t = d["HSBC"]               # select HSBC
 n = len(d)		            # no. of obs
 x_n = t.iloc[-1]            # select the last obs
@@ -107,7 +107,7 @@ print(VaR_GARCH)
 
 from scipy.stats import norm
 
-d = pd.read_csv("stock_1999_2002.csv", index_col=0)
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
 S = np.cov(u, rowvar=False)	            # sample cov. matrix
 w = np.array([40000, 30000, 30000])     # investment amount on each stock

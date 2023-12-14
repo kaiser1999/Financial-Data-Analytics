@@ -63,7 +63,7 @@ MCMC_predict <- function(X, MCMC_lst, method="median", burn_in=0){
 }
 
 ################################################################################
-df <- read.csv("fin-ratio.csv")   # read in data file
+df <- read.csv("../Datasets/fin-ratio.csv")   # read in data file
 X <- subset(df, select=-c(HSI)); y <- df$HSI
 
 MCMC_lst <- MCMC_logistic(X, y, num_it=5e5)

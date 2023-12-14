@@ -2,7 +2,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################
-d <- read.csv("us-rate.csv")  # Read in data
+d <- read.csv("../Datasets/us-rate.csv")  # Read in data
 
 label <- c("1m","3m","6m","9m","12m","18m","2y",
            "3y","4y","5y","7y","10y","15y")
@@ -88,12 +88,12 @@ all.equal(as.numeric(pca2$sdev), as.numeric(pca$sdev))
 
 ################################################################################
 
-d <- read.csv("us stocks.csv", header=TRUE, row.names=1)
+d <- read.csv("../Datasets/us stocks.csv", header=TRUE, row.names=1)
 # Compute daily logarithmic return for each equity
 r <- sapply(d, function(x) diff(log(x)))
 rownames(r) <- rownames(d)[-1]
 
-spx <- read.csv("spx.csv", header=TRUE, row.names=1)
+spx <- read.csv("../Datasets/spx_2020.csv", header=TRUE, row.names=1)
 
 PCA <- prcomp(r)
 pc1 <- PCA$rotation[,1]        # Save the loading of 1st PC
@@ -151,7 +151,7 @@ legend("topleft", c("PCA long", "PCA short", "S&P500"),
 axis(side=1, plot_date , format(plot_date , "%d-%m-%y"), cex.axis=1)
 
 ################################################################################
-d <- read.csv("fin-ratio.csv")  # read in dataset
+d <- read.csv("../Datasets/fin-ratio.csv")  # read in dataset
 # standardize the data so the columns of large loadings 
 # will not dominate the data
 d_scale <- scale(d[1:5])

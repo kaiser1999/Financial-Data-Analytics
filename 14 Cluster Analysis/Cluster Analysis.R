@@ -17,7 +17,7 @@ table(km_iris$cluster, iris[,5])  # Classification table
 ################################################################################
 ### HSI ###
 ################################################################################
-d <- read.csv("fin-ratio.csv")    # read in fin-ratio dataset
+d <- read.csv("../Datasets/fin-ratio.csv")    # read in fin-ratio dataset
 X <- d[,-7]                       # remove HSI label
 set.seed(4002)
 km_HSI <- kmeans(X, 2)            # K-means clustering with K=2
@@ -93,7 +93,7 @@ table(km3, iris[,5])              # classification table
 ################################################################################
 ### Cleaned HSI ###
 ################################################################################
-d <- read.csv("fin-ratio_cleaned.csv")   # read in cleaned HSI dataset
+d <- read.csv("../Datasets/fin-ratio_cleaned.csv")   # read in cleaned HSI dataset
 X <- d[,-7]                       # remove HSI label
 set.seed(4002)
 km2 <- km(X, 2)                   # try K=2

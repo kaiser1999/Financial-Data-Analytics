@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 np.set_printoptions(precision=4) # control display into 4 digis
 
-HSI_2002 = pd.read_csv("fin-ratio.csv")
+HSI_2002 = pd.read_csv("../Datasets/fin-ratio.csv")
 print(HSI_2002.columns.values)
 
 X_2002 = HSI_2002.drop(columns="HSI").values # A 680x6 data matrix
@@ -15,21 +15,6 @@ print(S_2002)
 
 R_2002 = np.corrcoef(X_2002, rowvar=False) # Correlation matrix
 print(R_2002)
-
-HSI_2018 = pd.read_csv("Financial ratio_2018.csv")
-print(HSI_2018.columns.values)
-
-X_2018 = HSI_2018.drop(columns="HSI").values # A 680x6 data matrix
-
-mu_2018 = np.mean(X_2018, axis=0) # Mean vector
-print(mu_2018)
-
-S_2018 = np.cov(X_2018, rowvar=False) # Covariance matrix
-print(S_2018)
-
-R_2018 = np.corrcoef(X_2018, rowvar=False) # Correlation matrix
-print(R_2018)
-
 
 #%%
 np.set_printoptions(precision=4) # control display into 4 digis
@@ -52,13 +37,3 @@ print(D_2002)
 sqrt_S_2002 = H_2002 @ np.sqrt(D_2002) @ H_2002.T # H D^1/2 H^T = A^1/2
 print(sqrt_S_2002 @ sqrt_S_2002)
 print(S_2002)
-
-#%%
-import statsmodels.api as sm
-
-X_2018, y_2018 = HSI_2018.drop(columns="HSI"), HSI_2018["HSI"]
-
-X_intercept_2018 = sm.add_constant(X_2018)
-
-logit_model = sm.GLM(y_2018, X_intercept_2018, family=sm.families.Binomial()).fit()
-print(logit_model.summary())

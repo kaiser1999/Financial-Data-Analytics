@@ -30,8 +30,8 @@ Remove_Outlier <- function(index, outlier_factor=1.5){
 
 # Hyperparameter
 outlier_removal <- TRUE
-start_year <- 2011
-end_year <- 2020
+start_year <- 2005
+end_year <- 2007
 
 if (outlier_removal){
   SPX <- Remove_Outlier(SPX)
@@ -79,8 +79,7 @@ summary(anova.test)
 # Reject the null hypothesis?
 summary(anova.test)[[1]][[1, "Pr(>F)"]] < 0.05
 
-tukey.test <- TukeyHSD(anova.test)
-tukey.test
+(tukey.test <- TukeyHSD(anova.test))
 plot(tukey.test)
 
 mu_SPX <- mean(Chosen_SPX$log_return)
@@ -95,11 +94,8 @@ n_SPX <- length(Chosen_SPX$log_return)
 n_HSI <- length(Chosen_HSI$log_return)
 n_FTSE <- length(Chosen_FTSE$log_return)
 
-df <- length(AllIndex$log_return) - 3
-df
-
-Within_group_MSE <- (SSE_SPX + SSE_HSI + SSE_FTSE) / df
-Within_group_MSE
+(df <- length(AllIndex$log_return) - 3)
+(Within_group_MSE <- (SSE_SPX + SSE_HSI + SSE_FTSE) / df)
 
 # Harmonic mean used for the two sample sizes
 SPX_HSI_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_SPX + 1/n_HSI)))

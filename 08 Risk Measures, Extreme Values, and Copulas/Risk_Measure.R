@@ -1,6 +1,6 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 d <- as.ts(d)
 
 x_n <- as.vector(d[nrow(d),]) # select the last obs
@@ -18,7 +18,7 @@ loss <- p_0 - p_n	            # loss
 
 library(tseries)
 
-d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 t <- as.ts(d$HSBC)          # select HSBC
 n <- nrow(d)                # no. of obs
 x_n <- t[n]                 # select the last obs
@@ -46,7 +46,7 @@ loss_GARCH <- p_0 - p_n     # loss
 
 library(fGarch) # load library "fGarch"
 
-d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 t <- as.ts(d$HSBC)          # select HSBC
 n <- nrow(d)                # no. of obs
 x_n <- t[n]                 # select the last obs
@@ -72,7 +72,7 @@ loss_GARCH <- p_0 - p_n     # loss
 
 ######################################################################
 
-d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 t <- as.ts(d)
 u <- (lag(t)-t)/t
 S <- var(u)                   # sample cov. matrix

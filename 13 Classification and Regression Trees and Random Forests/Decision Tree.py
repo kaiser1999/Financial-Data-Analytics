@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree, export_text
 from sklearn.metrics import confusion_matrix
 
 #%%
-df = pd.read_csv("fin-ratio.csv")
+df = pd.read_csv("../Datasets/fin-ratio.csv")
 X = df.drop(columns="HSI")
 y = df["HSI"]
 ctree = DecisionTreeClassifier(ccp_alpha=0.01)
@@ -89,7 +89,7 @@ print(np.mean((y - y_hat)**2))
 #%%
 from sklearn.ensemble import RandomForestClassifier
 
-df = pd.read_csv("fin-ratio.csv")
+df = pd.read_csv("../Datasets/fin-ratio.csv")
 X = df.drop(columns="HSI")
 y = df["HSI"]
 rf_clf = RandomForestClassifier(max_features=2, random_state=4002)
@@ -101,7 +101,7 @@ print(confusion_matrix(y_hat, y))
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-df = pd.read_csv("credit default.csv")
+df = pd.read_csv("../Datasets/credit default.csv")
 X = df.drop(columns=["default payment next month"])
 y = df["default payment next month"]
 

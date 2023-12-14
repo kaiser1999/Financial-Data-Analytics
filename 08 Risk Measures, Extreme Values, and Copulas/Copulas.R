@@ -1,7 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################
-d <- read.csv("stock_1999_2002.csv", row.names=1) # read in data file
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 d <- as.ts(d)
 returns <- (lag(d) - d)/d
 colnames(returns) <- paste0(colnames(d), "_Return")
@@ -24,6 +24,7 @@ for (k in 1:ncol(returns)){
 }
 par(mfrow=c(1, 1))
 
+library(copula)  # Package for copula computation
 empirical_marginals <- function(x) pobs(x)
 empirical_quantile <- function(p, samples){
   q <- matrix(NA, nrow=nrow(p), ncol=ncol(p))
@@ -37,7 +38,6 @@ empirical_quantile <- function(p, samples){
 emp_u <- empirical_marginals(returns)
 
 ################################################################################
-library(copula)  # Package for copula computation
 # Assume a normal-copula with ncol(d)=3
 # P2p: array of elements of upper triangular matrix
 N.cop <- normalCopula(dim=ncol(d), dispstr="un")
@@ -66,28 +66,27 @@ Mahalanobis2 <- function(X){
   
 }
 
-Mahalanobis_QQ_Plot <- function(sim_data, returns, col="blue"){
-  sim_Mahalanobis <- Mahalanobis2(sim_data)
-  raw_Mahalanobis <- Mahalanobis2(returns)
-  
-  n_days <- nrow(returns)
+QQ_Plot <- function(sim_data, raw_data, col="blue"){
+  n_days <- length(raw_data)
   i <- ((1:n_days) - 0.5) / n_days
-  q <- quantile(sim_Mahalanobis, probs=i, type=4, names=FALSE)
+  q <- quantile(sim_data, probs=i, type=4, names=FALSE)
   
-  qqplot(q, sort(raw_Mahalanobis), col=col,
+  qqplot(q, sort(raw_data), col=col,
          xlab="Empirical quantiles", ylab="Returns quantiles", 
          main="Squared Mahalanobis Q-Q Plot with empeirical marginals")
-  abline(lsfit(q, sort(raw_Mahalanobis)), lwd=2)
+  abline(lsfit(q, sort(raw_data)), lwd=2)
 }
 
-################################################################################
-Mahalanobis_QQ_Plot(return_sim_N, returns, col="blue")
+returns_MD2 <- Mahalanobis2(returns)
 
-d2 <- Mahalanobis(returns)
+################################################################################
+sim_N_MD2 <- Mahalanobis2(return_sim_N)
+QQ_Plot(sim_N_MD2, returns_MD2, col="blue")
+
 i <- ((1:n_days) - 0.5) / n_days
 q <- qchisq(i, 3)
-qqplot(q, sort(d2), main="Chi2 Q-Q Plot")		# QQ-chisquare plot
-abline(lsfit(q, sort(d2)))
+qqplot(q, sort(returns_MD2), main="Chi2 Q-Q Plot")
+abline(lsfit(q, sort(returns_MD2)))
 
 ################################################################################
 # Assume a t-copula  with ncol(d)=3
@@ -109,4 +108,23 @@ colnames(return_sim_t) <- colnames(d)
 pairs(return_sim_t[1:1e3,], col="green")  # only show the first 1000
 
 ################################################################################
-Mahalanobis_QQ_Plot(return_sim_t, returns, col="orange")
+sim_t_MD2 <- Mahalanobis2(return_sim_t)
+QQ_Plot(sim_t_MD2, returns_MD2, col="orange")
+
+################################################################################
+n_days <- nrow(returns)
+i <- ((1:n_days) - 0.5) / n_days
+q_N <- quantile(sim_N_MD2, probs=i, type=4, names=FALSE)
+q_t <- quantile(sim_t_MD2, probs=i, type=4, names=FALSE)
+linear_N <- lsfit(q_N, sort(returns_MD2))
+linear_t <- lsfit(q_t, sort(returns_MD2))
+
+par(mfrow=c(1, 1))
+# plot theoretical quantiles starting from 10
+(idx_start <- min(which(q_N > 10), which(q_t > 10)))
+plot(sort(linear_N$residuals^2)[idx_start:n_days], ylim=c(0, 25), 
+     ylab="squared residuals", pch=1, cex=1.5)
+points(sort(linear_t$residuals^2)[idx_start:n_days], 
+       pch=4, cex=1.5, lwd=2)
+legend("topleft", pch=c(1, 4), cex=1.5, lwd=c(1, 2),
+       legend=c("Gaussian copula", "Student's t-copula"), lty=0)

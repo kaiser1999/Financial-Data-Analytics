@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-d = pd.read_csv("us-rate.csv")  # Read in data
+d = pd.read_csv("../Datasets/us-rate.csv")  # Read in data
 
 label = ["1m","3m","6m","9m","12m","18m","2y",
          "3y","4y","5y","7y","10y","15y"]
@@ -110,10 +110,10 @@ print(np.allclose(pca2["sdev"], np.sqrt(s2)))
 import pandas as pd
 import numpy as np
 	
-d = pd.read_csv("us stocks.csv", index_col=0)
+d = pd.read_csv("../Datasets/us stocks.csv", index_col=0)
 r = d.apply(np.log).diff().dropna()
 
-spx = pd.read_csv("spx.csv", index_col=0)
+spx = pd.read_csv("../Datasets/spx_2020.csv", index_col=0)
 
 from sklearn.decomposition import PCA
 pca = PCA(1).fit(r)

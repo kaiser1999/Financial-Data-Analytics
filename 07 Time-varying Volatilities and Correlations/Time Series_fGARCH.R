@@ -4,7 +4,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 library(tseries)
 
-d <- read.csv("stock_1999_2002.csv", row.names=1)
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1)
 date <- as.Date(rownames(d), format="%d/%m/%Y")
 d <- as.ts(d)
 u <- (lag(d) - d)/d

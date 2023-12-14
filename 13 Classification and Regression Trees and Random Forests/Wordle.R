@@ -107,7 +107,7 @@ wordle_game <- function(word_bank, guess=NA, answer=NA){
 }
 
 ################################################################################
-df <- read.csv("wordle.csv")
+df <- read.csv("../Datasets/wordle.csv")
 results <- c()
 for (i in 1:length(df$word)){
   re <- wordle_game(df$word, guess=NA, answer=df$word[i])

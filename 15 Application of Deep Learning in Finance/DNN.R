@@ -31,7 +31,7 @@ pred <- round(iris.nn$fit)  # round the fitted values
 table(pred, y)              # classification table
 
 ################################################################################
-d <- read.csv("fin-ratio.csv")
+d <- read.csv("../Datasets/fin-ratio.csv")
 names(d)
 X <- subset(d, select=-c(HSI)); y <- d$HSI
 set.seed(4002)
@@ -42,7 +42,7 @@ table(pred, y)              # classification table
 
 ################################################################################
 source("ann.R")
-d <- read.csv("fin-ratio.csv")
+d <- read.csv("../Datasets/fin-ratio.csv")
 X <- subset(d, select=-c(HSI)); y <- d$HSI
 set.seed(4002)
 fin.nn <- ann(X,y,size=2,linout=T,try=10) # 10 trials
@@ -60,7 +60,7 @@ pred <- max.col(iris.nn$fit)# find column name with max. fitted values
 table(pred, y)              # classification table
 
 ################################################################################
-d <- read.csv("fin-ratio.csv")
+d <- read.csv("../Datasets/fin-ratio.csv")
 X <- subset(d, select=-c(HSI)); y <- d$HSI
 y <- as.factor(d$HSI)       # y as factor
 set.seed(4002)

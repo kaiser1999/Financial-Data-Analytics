@@ -7,7 +7,7 @@ library(rpart.plot)                     # plot rpart object
 ################################################################################
 ### Financial ratio ###
 ################################################################################
-df <- read.csv("fin-ratio.csv")         # read in data in csv format
+df <- read.csv("../Datasets/fin-ratio.csv")         # read in data in csv format
 ctree <- rpart(HSI~., data=df, method="class")
 print(ctree)                            # print detailed information
 rpart.rules(ctree, nn=TRUE)             # print classification rules
@@ -110,7 +110,7 @@ mean((test.data$medv - y_hat)^2)
 library(randomForest)
 
 set.seed(4002)
-df <- read.csv("fin-ratio.csv")         # read in data in csv format
+df <- read.csv("../Datasets/fin-ratio.csv")         # read in data in csv format
 df$HSI <- as.factor(df$HSI) # change label into factor for classification
 rf_clf <- randomForest(HSI~., data=df, ntree=10, mtry=2, importance=TRUE)
 y_hat <- predict(rf_clf)

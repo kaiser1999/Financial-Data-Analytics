@@ -46,7 +46,7 @@ STOCKS = ["AAL", "GS", "FB", "MS"]
 train_len = 900  # 900 trading days approximately 3.5 of calender years
 seq_len = 10
 for stock in STOCKS:
-    df = pd.read_csv(f"{stock}.csv")
+    df = pd.read_csv(f"../Datasets/{stock}.csv")
     stock_train = df["Adj Close"].iloc[:train_len].values
     stock_test = df["Adj Close"].iloc[train_len:].values
     
@@ -71,4 +71,4 @@ for stock in STOCKS:
     plt.xlabel("trading days", fontsize=25)
     plt.legend(loc='lower right', fontsize=25)
     plt.tight_layout()
-    plt.savefig("Prediction of " + stock+".png", dpi=200)
+    plt.savefig("../Picture/Prediction of " + stock+".png", dpi=200)

@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler
 
-df = pd.read_csv("fin-ratio.csv")   # read in dataset
+df = pd.read_csv("../Datasets/fin-ratio.csv")   # read in dataset
 X = df.drop(columns="HSI").values
 y = df.HSI.values
 

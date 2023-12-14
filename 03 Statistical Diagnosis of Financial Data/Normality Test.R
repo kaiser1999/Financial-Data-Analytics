@@ -1,6 +1,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-d <- read.csv("stock_1999_2002 (no date).csv")	  # read in data file
+############################################################
+d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1)	  # read in data file
 d <- as.ts(d)
 u <- (lag(d) - d) / d
 colnames(u) <- colnames(d)
@@ -81,9 +82,12 @@ df_CK <- QQt.plot(u[,"CK"], comp="CK")
 
 ############################################################
 
-ks.test(u[,"HSBC"], pt, df_HSBC)
-ks.test(u[,"CLP"], pt, df_CLP)
-ks.test(u[,"CK"], pt, df_CK)
+t_HSBC <- u[,"HSBC"]/sd(u[,"HSBC"])*sqrt(df_HSBC/(df_HSBC-2))
+ks.test(t_HSBC, pt, df_HSBC)
+t_CLP <- u[,"CLP"]/sd(u[,"CLP"])*sqrt(df_CLP/(df_CLP-2))
+ks.test(t_CLP, pt, df_CLP)
+t_CK <- u[,"CK"]/sd(u[,"CK"])*sqrt(df_CK/(df_CK-2))
+ks.test(t_CK, pt, df_CK)
 
 ############################################################
 
@@ -101,6 +105,8 @@ q <- qchisq(i,3)		# compute quantiles
 par(mfrow=c(1,1))
 qqplot(q, sd2_180, main="Chi2 Q-Q Plot")		# QQ-chisquare plot
 qqline(sd2_180, distribution=function(p) qchisq(p, df=3))
+
+ks.test(sd2_180, pchisq, 3)
 
 ############################################################
 
@@ -140,45 +146,27 @@ acf(u[,"HSBC"]^2); acf(u[,"CLP"]^2); acf(u[,"CK"]^2)
 
 ############################################################
 
-set.seed(4002)
-
-mu_180 <- apply(u_180, 2, mean)
-S_180 <- cov(u_180)
-C_180 <- chol(S_180) # Cholesky decomposition of Sigma
-# set s0 to the most recent price		 
-s0 <- tail(d, 1)
-s_pred <- c()
-for (i in 1:90) {
-  z <- rnorm(3)
-  v <- mu_180 + t(C_180) %*% z
-  s1 <- s0 * (1 + t(v))	# new stock price
-  s_pred <- rbind(s_pred, s1)
-  s0 <- s1	# update s0
-}
-
-s_pred <- ts(s_pred, start=nrow(d)+1)
-data <- ts.union(d, s_pred)
-par(mfrow=c(1,1))
-
-col <- c("blue", "orange", "green", "pink", "brown", "red")
-plot(data, plot.type="s", col=col)
-legend("topright", col=col, lty=1,
-       legend=c("HSBC", "CLP", "CK", "HSBC_pred", "CLP_pred", "CK_pred"))
-
-############################################################
-
-shapiro.test(u[,"HSBC"])
-
-Shapiro_Test <- function(x, n_sim=100000){
-  z <- matrix(rnorm(length(x)*n_sim), ncol=length(x))
-  sz <- t(apply(z, 1, sort))
-  m <- apply(sz, 2, mean)
-  V <- cov(sz)
-  inv_V <- solve(V)
-  c <- (t(m) %*% inv_V %*% inv_V %*% m)^(1/2)
-  a <- t(m) %*% inv_V / as.numeric(c)
-  W <- sum(a * sort(x))^2/sum((x-mean(x))^2)
-  return (W)
-}
-
-(Shapiro_Test(u[,"HSBC"]))
+# set.seed(4002)
+# 
+# mu_180 <- apply(u_180, 2, mean)
+# S_180 <- cov(u_180)
+# C_180 <- chol(S_180) # Cholesky decomposition of Sigma
+# # set s0 to the most recent price		 
+# s0 <- tail(d, 1)
+# s_pred <- c()
+# for (i in 1:90) {
+#   z <- rnorm(3)
+#   v <- mu_180 + t(C_180) %*% z
+#   s1 <- s0 * (1 + t(v))	# new stock price
+#   s_pred <- rbind(s_pred, s1)
+#   s0 <- s1	# update s0
+# }
+# 
+# s_pred <- ts(s_pred, start=nrow(d)+1)
+# data <- ts.union(d, s_pred)
+# par(mfrow=c(1,1))
+# 
+# col <- c("blue", "orange", "green", "pink", "brown", "red")
+# plot(data, plot.type="s", col=col)
+# legend("topright", col=col, lty=1,
+#        legend=c("HSBC", "CLP", "CK", "HSBC_pred", "CLP_pred", "CK_pred"))

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-d = pd.read_csv("stock_1999_2002.csv", index_col=0)
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
 u.columns = d.columns.values + "_Return"
 

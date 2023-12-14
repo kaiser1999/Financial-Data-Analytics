@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-d = pd.read_csv("stock_1999_2002 (no date).csv")
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
 
 d.plot(subplots=True, layout=(3,1), figsize=(10, 10))
@@ -31,21 +31,20 @@ fig.tight_layout()
 fig.savefig("../Picture/Stock Normality Plot.png", dpi=200)
 
 #%%
-
 print(stats.shapiro(u.HSBC))
 print(stats.shapiro(u.CLP))
 print(stats.shapiro(u.CK))
 
 #%%
-print(stats.kstest(u.HSBC, stats.norm.cdf, 
-                   args=(np.mean(u.HSBC), np.std(u.HSBC))))
-print(stats.kstest(u.CLP, stats.norm.cdf,
-                   args=(np.mean(u.CLP), np.std(u.CLP))))
-print(stats.kstest(u.CK, stats.norm.cdf,
-                   args=(np.mean(u.CK), np.std(u.CK))))
-
+print(stats.kstest(u.HSBC, stats.norm.cdf, method="asymp",
+                   args=(np.mean(u.HSBC), np.std(u.HSBC, ddof=1))))
+print(stats.kstest(u.CLP, stats.norm.cdf, method="asymp",
+                   args=(np.mean(u.CLP), np.std(u.CLP, ddof=1))))
+print(stats.kstest(u.CK, stats.norm.cdf, method="asymp",
+                   args=(np.mean(u.CK), np.std(u.CK, ddof=1))))
+    
+    
 #%%
-
 def JB_test(u):
     z = u - np.mean(u)  # Remove mean
     n = len(z) # Sample size
@@ -105,15 +104,18 @@ fig.savefig("../Picture/Stock t Plot.png", dpi=200)
 #%%
 print([df_HSBC, df_CLP, df_CK])
 
-print(stats.kstest(u.HSBC, stats.t.cdf, args=(df_HSBC,)))
-print(stats.kstest(u.CLP, stats.t.cdf, args=(df_CLP,)))
-print(stats.kstest(u.CK, stats.t.cdf, args=(df_CK,)))
+t_HSBC = u.HSBC/np.std(u.HSBC, ddof=1)*np.sqrt(df_HSBC/(df_HSBC-2))
+print(stats.kstest(t_HSBC, stats.t.cdf, args=(df_HSBC,), method="asymp"))
+t_CLP = u.CLP/np.std(u.CLP, ddof=1)*np.sqrt(df_CLP/(df_CLP-2))
+print(stats.kstest(t_CLP, stats.t.cdf, args=(df_CLP,), method="asymp"))
+t_CK = u.CK/np.std(u.CK, ddof=1)*np.sqrt(df_CK/(df_CK-2))
+print(stats.kstest(t_CK, stats.t.cdf, args=(df_CK,), method="asymp"))
 
 #%%
 n = 180
 u_180 = u.iloc[len(u)-n:, :]
 mu_180 = np.mean(u_180, axis=0)
-S_180 = np.cov(u_180, rowvar=False)
+S_180 = np.cov(u_180, rowvar=False, ddof=1)
 
 z_180 = (u_180 - mu_180).values.reshape(n, -1)
 d2_180 = np.diagonal(z_180 @ np.linalg.inv(S_180) @ z_180.T)
@@ -131,11 +133,11 @@ plt.title("Chi2 Q-Q Plot")
 plt.tight_layout()
 plt.savefig("../Picture/Stock Chi2 Plot.png", dpi=200)
 
-print(stats.kstest(d2_180, stats.chi2.cdf, args=(3,)))
+print(stats.kstest(d2_180, stats.chi2.cdf, args=(3,), method="asymp"))
 
 #%%
 
-print(np.corrcoef(u_180, rowvar=False))
+print(np.corrcoef(u_180, rowvar=False, ddof=1))
 
 #%%
 fig = plt.figure(figsize=(10, 10))
@@ -202,24 +204,25 @@ plt.tight_layout()
 fig.savefig("../Picture/Stock ACF Plot.png", dpi=200)
 
 #%%
-np.random.seed(4012)
-mu_180 = np.mean(u_180)
-S_180 = np.cov(u_180, rowvar=False)
-C_180 = np.linalg.cholesky(S_180)
-s0 = d.iloc[-1,:]
-s_pred = []
-for i in range(90):
-    z = np.random.randn(3)
-    v = mu_180 + C_180.T @ z
-    s1 = s0 * (1 + v)
-    s_pred.append(s1.values)
-    s0 = s1
+# np.random.seed(4012)
+# mu_180 = np.mean(u_180)
+# S_180 = np.cov(u_180, rowvar=False)
+# C_180 = np.linalg.cholesky(S_180)
+# s0 = d.iloc[-1,:]
+# s_pred = []
+# for i in range(90):
+#     z = np.random.randn(3)
+#     v = mu_180 + C_180.T @ z
+#     s1 = s0 * (1 + v)
+#     s_pred.append(s1.values)
+#     s0 = s1
 
-df_pred = pd.DataFrame(np.array(s_pred), 
-                       columns=d.columns.values + "_pred")
-df_pred.index = np.arange(len(d)+1, len(d)+90+1)
+# df_pred = pd.DataFrame(np.array(s_pred), 
+#                        columns=d.columns.values + "_pred")
+# df_pred.index = np.arange(len(d)+1, len(d)+90+1)
 
-pd.merge(d, df_pred, how='outer', left_index=True, 
-         right_index=True).plot(figsize=(10, 7))
-plt.tight_layout()
-plt.savefig("../Picture/Stock Prediction.png", dpi=200)
+# d.index = np.arange(len(d))
+# pd.merge(d, df_pred, how='outer', left_index=True, 
+#          right_index=True).plot(figsize=(10, 7))
+# plt.tight_layout()
+# plt.savefig("../Picture/Stock Prediction.png", dpi=200)

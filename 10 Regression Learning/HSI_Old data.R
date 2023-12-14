@@ -2,7 +2,7 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################
-d <- read.csv("fin-ratio.csv")
+d <- read.csv("../Datasets/fin-ratio.csv")
 summary(lm(HSI~EY+CFTP+ln_MV+DY+BTME+DTE, data=d))
 summary(lm(HSI~EY+CFTP+ln_MV+DY+BTME, data=d))
 
@@ -46,7 +46,7 @@ mdist <- function(x) {
 }
 
 ################################################################################
-d <- read.csv("fin-ratio.csv")        # read in dataset
+d <- read.csv("../Datasets/fin-ratio.csv")        # read in dataset
 d0 <- d[d$HSI==0,]                    # select HSI=0
 d1 <- d[d$HSI==1,]                    # select HSI=1
 dim(d0)
