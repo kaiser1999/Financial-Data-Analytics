@@ -8,10 +8,10 @@ colnames(returns) <- paste0(colnames(d), "_Return")
 u1 <- returns[,"HSBC_Return"]
 u2 <- returns[,"CLP_Return"]
 u3 <- returns[,"CK_Return"]
-n_sim <- 1e4
+n_sim <- 1e5
 
 par(mfrow=c(1,3))
-# QQ plot for empirical marginals
+# Q-Q plot for empirical marginals
 col <- c("blue", "orange", "green")
 n_days <- nrow(returns)
 i <- ((1:n_days) - 0.5) / n_days
@@ -77,16 +77,16 @@ QQ_Plot <- function(sim_data, raw_data, col="blue"){
   abline(lsfit(q, sort(raw_data)), lwd=2)
 }
 
-returns_MD2 <- Mahalanobis2(returns)
+returns_md2 <- Mahalanobis2(returns)
 
 ################################################################################
-sim_N_MD2 <- Mahalanobis2(return_sim_N)
-QQ_Plot(sim_N_MD2, returns_MD2, col="blue")
+sim_N_md2 <- Mahalanobis2(return_sim_N)
+QQ_Plot(sim_N_md2, returns_md2, col="blue")
 
 i <- ((1:n_days) - 0.5) / n_days
 q <- qchisq(i, 3)
-qqplot(q, sort(returns_MD2), main="Chi2 Q-Q Plot")
-abline(lsfit(q, sort(returns_MD2)))
+qqplot(q, sort(returns_md2), main="Chi2 Q-Q Plot")
+abline(lsfit(q, sort(returns_md2)))
 
 ################################################################################
 # Assume a t-copula  with ncol(d)=3
@@ -108,16 +108,16 @@ colnames(return_sim_t) <- colnames(d)
 pairs(return_sim_t[1:1e3,], col="green")  # only show the first 1000
 
 ################################################################################
-sim_t_MD2 <- Mahalanobis2(return_sim_t)
-QQ_Plot(sim_t_MD2, returns_MD2, col="orange")
+sim_t_md2 <- Mahalanobis2(return_sim_t)
+QQ_Plot(sim_t_md2, returns_md2, col="orange")
 
 ################################################################################
 n_days <- nrow(returns)
 i <- ((1:n_days) - 0.5) / n_days
-q_N <- quantile(sim_N_MD2, probs=i, type=4, names=FALSE)
-q_t <- quantile(sim_t_MD2, probs=i, type=4, names=FALSE)
-linear_N <- lsfit(q_N, sort(returns_MD2))
-linear_t <- lsfit(q_t, sort(returns_MD2))
+q_N <- quantile(sim_N_md2, probs=i, type=4, names=FALSE)
+q_t <- quantile(sim_t_md2, probs=i, type=4, names=FALSE)
+linear_N <- lsfit(q_N, sort(returns_md2))
+linear_t <- lsfit(q_t, sort(returns_md2))
 
 par(mfrow=c(1, 1))
 # plot theoretical quantiles starting from 10
@@ -127,4 +127,4 @@ plot(sort(linear_N$residuals^2)[idx_start:n_days], ylim=c(0, 25),
 points(sort(linear_t$residuals^2)[idx_start:n_days], 
        pch=4, cex=1.5, lwd=2)
 legend("topleft", pch=c(1, 4), cex=1.5, lwd=c(1, 2),
-       legend=c("Gaussian copula", "Student's t-copula"), lty=0)
+       legend=c("Gaussian copula", "t-copula"), lty=0)
