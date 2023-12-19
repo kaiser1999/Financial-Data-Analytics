@@ -57,7 +57,7 @@ jarque.bera.test(u[,"CK"])
 
 library("car")
 
-QQt.plot <- function(u, comp=""){
+t.QQ.plot <- function(u, comp=""){
   z <- u - mean(u) # Remove mean
   sz <- sort(z)		   # sort z
   n <- length(z)		  # sample size
@@ -76,9 +76,9 @@ QQt.plot <- function(u, comp=""){
 }
 
 par(mfrow=c(3,2), mar=c(4,4,4,4))
-df_HSBC <- QQt.plot(u[,"HSBC"], comp="HSBC")
-df_CLP <- QQt.plot(u[,"CLP"], comp="CLP")
-df_CK <- QQt.plot(u[,"CK"], comp="CK")
+df_HSBC <- t.QQ.plot(u[,"HSBC"], comp="HSBC")
+df_CLP <- t.QQ.plot(u[,"CLP"], comp="CLP")
+df_CK <- t.QQ.plot(u[,"CK"], comp="CK")
 
 ############################################################
 
@@ -90,23 +90,22 @@ t_CK <- u[,"CK"]/sd(u[,"CK"])*sqrt(df_CK/(df_CK-2))
 ks.test(t_CK, pt, df_CK)
 
 ############################################################
-
 n <- 180
 u_180 <- tail(u, n)
 mu_180 <- apply(u_180, 2, mean)
 S_180 <- cov(u_180)
 
 z_180 <- sweep(u_180, 2, mu_180)
-d2_180 <- diag(z_180 %*% solve(S_180) %*% t(z_180))
-sd2_180 <- sort(d2_180)		# sort d2 in ascendingly
+md2_180 <- rowSums((z_180 %*% solve(S_180)) * z_180)
+smd2_180 <- sort(md2_180)		# sort md2 in ascendingly
 i <- ((1:n)-0.5)/n		# create percentile vector
 q <- qchisq(i,3)		# compute quantiles 
 
 par(mfrow=c(1,1))
-qqplot(q, sd2_180, main="Chi2 Q-Q Plot")		# QQ-chisquare plot
-qqline(sd2_180, distribution=function(p) qchisq(p, df=3))
+qqplot(q, smd2_180, main="Chi2 Q-Q Plot")		# QQ-chisquare plot
+qqline(smd2_180, distribution=function(p) qchisq(p, df=3))
 
-ks.test(sd2_180, pchisq, 3)
+ks.test(smd2_180, pchisq, 3)
 
 ############################################################
 
@@ -146,27 +145,27 @@ acf(u[,"HSBC"]^2); acf(u[,"CLP"]^2); acf(u[,"CK"]^2)
 
 ############################################################
 
-# set.seed(4002)
-# 
-# mu_180 <- apply(u_180, 2, mean)
-# S_180 <- cov(u_180)
-# C_180 <- chol(S_180) # Cholesky decomposition of Sigma
-# # set s0 to the most recent price		 
-# s0 <- tail(d, 1)
-# s_pred <- c()
-# for (i in 1:90) {
-#   z <- rnorm(3)
-#   v <- mu_180 + t(C_180) %*% z
-#   s1 <- s0 * (1 + t(v))	# new stock price
-#   s_pred <- rbind(s_pred, s1)
-#   s0 <- s1	# update s0
-# }
-# 
-# s_pred <- ts(s_pred, start=nrow(d)+1)
-# data <- ts.union(d, s_pred)
-# par(mfrow=c(1,1))
-# 
-# col <- c("blue", "orange", "green", "pink", "brown", "red")
-# plot(data, plot.type="s", col=col)
-# legend("topright", col=col, lty=1,
-#        legend=c("HSBC", "CLP", "CK", "HSBC_pred", "CLP_pred", "CK_pred"))
+set.seed(4002)
+
+mu_180 <- apply(u_180, 2, mean)
+S_180 <- cov(u_180)
+C_180 <- chol(S_180) # Cholesky decomposition of Sigma
+# set s0 to the most recent price
+s0 <- tail(d, 1)
+s_pred <- c()
+for (i in 1:90) {
+  z <- rnorm(3)
+  v <- mu_180 + t(C_180) %*% z
+  s1 <- s0 * (1 + t(v))	# new stock price
+  s_pred <- rbind(s_pred, s1)
+  s0 <- s1	# update s0
+}
+
+s_pred <- ts(s_pred, start=nrow(d)+1)
+data <- ts.union(d, s_pred)
+par(mfrow=c(1,1))
+
+col <- c("blue", "orange", "green", "pink", "brown", "red")
+plot(data, plot.type="s", col=col)
+legend("topright", col=col, lty=1,
+       legend=c("HSBC", "CLP", "CK", "HSBC_pred", "CLP_pred", "CK_pred"))

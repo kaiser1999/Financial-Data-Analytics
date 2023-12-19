@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
+import statsmodels.api as sm
 
 d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
@@ -10,23 +11,14 @@ d.plot(subplots=True, layout=(3,1), figsize=(10, 10))
 u.plot(subplots=True, layout=(3,1), sharey=True, figsize=(10, 10))
 
 fig, axs = plt.subplots(3, 2, figsize=(10,15))
-axs[0,0].hist(u.HSBC, color="blue", ec='black', bins="sturges")
-axs[0,0].set_title("Histogram of HSBC Return")
-stats.probplot(u.HSBC, dist="norm", plot=axs[0,1])
-axs[0,1].set_title("Normal Q-Q Plot of HSBC Return")
-axs[0,1].get_lines()[0].set_color('blue')
+col = ["blue", "orange", "green"]
+for i, comp in enumerate(u.columns):
+    axs[i,0].hist(u[comp], color=col[i], ec='black', bins="sturges")
+    axs[i,0].set_title(f"Histogram of {comp} Return")
+    sm.qqplot(u[comp], dist=stats.norm, ax=axs[i,1], line="q", 
+              markerfacecolor=col[i], markeredgewidth=0)
+    axs[i,1].set_title(f"Normal Q-Q Plot of {comp} Return")
 
-axs[1,0].hist(u.CLP, color="orange", ec='black', bins="sturges")
-axs[1,0].set_title("Histogram of CLP Return")
-stats.probplot(u.CLP, dist="norm", plot=axs[1,1])
-axs[1,1].set_title("Normal Q-Q Plot of CLP Return")
-axs[1,1].get_lines()[0].set_color('orange')
-
-axs[2,0].hist(u.CK, color="green", ec='black', bins="sturges")
-axs[2,0].set_title("Histogram of CK Return")
-stats.probplot(u.CK, dist="norm", plot=axs[2,1])
-axs[2,1].set_title("Normal Q-Q Plot of CK Return")
-axs[2,1].get_lines()[0].set_color('green')
 fig.tight_layout()
 fig.savefig("../Picture/Stock Normality Plot.png", dpi=200)
 
@@ -42,7 +34,6 @@ print(stats.kstest(u.CLP, stats.norm.cdf, method="asymp",
                    args=(np.mean(u.CLP), np.std(u.CLP, ddof=1))))
 print(stats.kstest(u.CK, stats.norm.cdf, method="asymp",
                    args=(np.mean(u.CK), np.std(u.CK, ddof=1))))
-    
     
 #%%
 def JB_test(u):
@@ -66,7 +57,7 @@ print(JB_test(u.CK))
 
 #%%
 
-def QQt_plot(u, color="blue", comp="", ax=None):
+def t_QQ_plot(u, color="blue", comp="", ax=None):
     z = u - np.mean(u)              # Remove mean
     sz = np.sort(z)                 # Sort z
     n = len(z)                      # Sample size
@@ -84,17 +75,17 @@ def QQt_plot(u, color="blue", comp="", ax=None):
     return nu
 
 fig, axs = plt.subplots(3, 2, figsize=(10,15))
-df_HSBC = QQt_plot(u.HSBC, color="blue", comp="HSBC", ax=axs[0,0])
+df_HSBC = t_QQ_plot(u.HSBC, color="blue", comp="HSBC", ax=axs[0,0])
 stats.probplot(u.HSBC, dist="t", sparams=df_HSBC, plot=axs[0,1])
 axs[0,1].set_title("t Q-Q Plot of HSBC Return")
 axs[0,1].get_lines()[0].set_color('blue')
 
-df_CLP = QQt_plot(u.CLP, color="orange", comp="CLP", ax=axs[1,0])
+df_CLP = t_QQ_plot(u.CLP, color="orange", comp="CLP", ax=axs[1,0])
 stats.probplot(u.CLP, dist="t", sparams=df_CLP, plot=axs[1,1])
 axs[1,1].set_title("t Q-Q Plot of CLP Return")
 axs[1,1].get_lines()[0].set_color('orange')
 
-df_CK = QQt_plot(u.CK, color="green", comp="CK", ax=axs[2,0])
+df_CK = t_QQ_plot(u.CK, color="green", comp="CK", ax=axs[2,0])
 stats.probplot(u.CK, dist="t", sparams=df_CK, plot=axs[2,1])
 axs[2,1].set_title("t Q-Q Plot of CK Return")
 axs[2,1].get_lines()[0].set_color('green')
@@ -112,28 +103,36 @@ t_CK = u.CK/np.std(u.CK, ddof=1)*np.sqrt(df_CK/(df_CK-2))
 print(stats.kstest(t_CK, stats.t.cdf, args=(df_CK,), method="asymp"))
 
 #%%
+t_HSBC = (u.HSBC - np.mean(u.HSBC))/np.std(u.HSBC, ddof=1)
+print(stats.kstest(t_HSBC, stats.t.cdf, args=(df_HSBC,), method="asymp"))
+t_CLP = (u.CLP - np.mean(u.CLP))/np.std(u.CLP, ddof=1)
+print(stats.kstest(t_CLP, stats.t.cdf, args=(df_CLP,), method="asymp"))
+t_CK = (u.CK - np.mean(u.CK))/np.std(u.CK, ddof=1)
+print(stats.kstest(t_CK, stats.t.cdf, args=(df_CK,), method="asymp"))
+
+#%%
 n = 180
 u_180 = u.iloc[len(u)-n:, :]
 mu_180 = np.mean(u_180, axis=0)
 S_180 = np.cov(u_180, rowvar=False, ddof=1)
 
 z_180 = (u_180 - mu_180).values.reshape(n, -1)
-d2_180 = np.diagonal(z_180 @ np.linalg.inv(S_180) @ z_180.T)
-sd2_180 = np.sort(d2_180)
+md2_180 = np.sum((z_180 @ np.linalg.inv(S_180)) * z_180, axis=1)
+smd2_180 = np.sort(md2_180)
 i = (np.arange(1, n+1)-0.5)/n
 q = stats.chi2.ppf(i, 3)
 
 fig = plt.figure(figsize=(10, 10))
-b, w = np.linalg.lstsq(np.vstack([np.ones(n), q]).T, sd2_180, 
+b, w = np.linalg.lstsq(np.vstack([np.ones(n), q]).T, smd2_180, 
                        rcond=None)[0]
-plt.scatter(q, sd2_180, color="blue")
+plt.scatter(q, smd2_180, color="blue")
 plt.plot(q, w*q + b, color="blue")
 plt.title("Chi2 Q-Q Plot")
 
 plt.tight_layout()
 plt.savefig("../Picture/Stock Chi2 Plot.png", dpi=200)
 
-print(stats.kstest(d2_180, stats.chi2.cdf, args=(3,), method="asymp"))
+print(stats.kstest(md2_180, stats.chi2.cdf, args=(3,), method="asymp"))
 
 #%%
 
@@ -148,81 +147,76 @@ new_labels = [round(float(i.get_text()), 2) for i in
               axes[0,0].get_yticklabels()]
 axes[0,0].set_yticklabels(new_labels)
 plt.tight_layout()
-fig.savefig("../Picture/Stock scatter matrix.png", dpi=200)
+plt.savefig("../Picture/Stock scatter matrix.png", dpi=200)
 
 #%%
-
 fig, axs = plt.subplots(4, 3, figsize=(15,20))
-axs[0,0].hist(d.HSBC, color="blue", ec='black', bins="sturges")
-axs[0,0].set_title("Histogram of HSBC Price")
-stats.probplot(d.HSBC, dist="norm", plot=axs[1,0])
-axs[1,0].set_title("Normal Q-Q Plot of HSBC Price")
-axs[1,0].get_lines()[0].set_color('blue')
-pd.plotting.lag_plot(d.HSBC, lag=1, ax=axs[2,0], c="blue")
-axs[2,0].set_title("1-day Lagged Plot of HSBC Price")
-pd.plotting.lag_plot(u.HSBC, lag=1, ax=axs[3,0], c="blue")
-axs[3,0].set_title("1-day Lagged Plot of HSBC Return")
+col = ["blue", "orange", "green"]
+for i, comp in enumerate(d.columns):
+    axs[0,i].hist(d[comp], color=col[i], ec='black', bins="sturges")
+    axs[0,i].set_title(f"Histogram of {comp} Price")
+    stats.probplot(d[comp], dist="norm", plot=axs[1,i])
+    axs[1,i].set_title(f"Normal Q-Q Plot of {comp} Price")
+    axs[1,i].get_lines()[0].set_color(col[i])
+    pd.plotting.lag_plot(d[comp], lag=1, ax=axs[2,i], c=col[i])
+    axs[2,i].set_xlabel(f"{comp}(t)")
+    axs[2,i].set_ylabel(f"{comp}(t+1)")
+    axs[2,i].set_title(f"1-day Lagged Plot of {comp} Price")
+    pd.plotting.lag_plot(u[comp], lag=1, ax=axs[3,i], c=col[i])
+    axs[3,i].set_xlabel(f"{comp}(t)")
+    axs[3,i].set_ylabel(f"{comp}(t+1)")
+    axs[3,i].set_title(f"1-day Lagged Plot of {comp} Return")
 
-axs[0,1].hist(d.CLP, color="orange", ec='black', bins="sturges")
-axs[0,1].set_title("Histogram of CLP Price")
-stats.probplot(d.CLP, dist="norm", plot=axs[1,1])
-axs[1,1].set_title("Normal Q-Q Plot of CLP Price")
-axs[1,1].get_lines()[0].set_color('orange')
-pd.plotting.lag_plot(d.CLP, lag=1, ax=axs[2,1], c="orange")
-axs[2,1].set_title("1-day Lagged Plot of CLP Price")
-pd.plotting.lag_plot(u.CLP, lag=1, ax=axs[3,1], c="orange")
-axs[3,1].set_title("1-day Lagged Plot of CLP Return")
-
-axs[0,2].hist(d.CK, color="green", ec='black', bins="sturges")
-axs[0,2].set_title("Histogram of CK Price")
-stats.probplot(d.CK, dist="norm", plot=axs[1,2])
-axs[1,2].set_title("Normal Q-Q Plot of CK Price")
-axs[1,2].get_lines()[0].set_color('green')
-pd.plotting.lag_plot(d.CK, lag=1, ax=axs[2,2], c="green")
-axs[2,2].set_title("1-day Lagged Plot of CK Price")
-pd.plotting.lag_plot(u.CK, lag=1, ax=axs[3,2], c="green")
-axs[3,2].set_title("1-day Lagged Plot of CK Return")
 plt.tight_layout()
 fig.savefig("../Picture/Stock Price Normality Plot.png", dpi=200)
 
 #%%
-
 from statsmodels.graphics.tsaplots import plot_acf
 fig, axs = plt.subplots(3, 3, figsize=(15,15))
-plot_acf(d.HSBC, alpha=None, c="blue", title="ACF Plot of HSBC Price", ax=axs[0,0])
-plot_acf(u.HSBC, alpha=None, c="blue", title="ACF Plot of HSBC Return", ax=axs[1,0])
-plot_acf(u.HSBC**2, alpha=None, c="blue", title="ACF Plot of Squared HSBC Return", ax=axs[2,0])
+alpha = 0.05
+c_i = stats.norm.ppf(1-alpha/2) / np.sqrt(len(d))
 
-plot_acf(d.CLP, alpha=None, c="orange", title="ACF Plot of CLP Price", ax=axs[0,1])
-plot_acf(u.CLP, alpha=None, c="orange", title="ACF Plot of CLP Return", ax=axs[1,1])
-plot_acf(u.CLP**2, alpha=None, c="orange", title="ACF Plot of Squared CLP Return", ax=axs[2,1])
+for i, comp in enumerate(d.columns):
+    plot_acf(d[comp], alpha=None, c=col[i],
+             title=f"ACF Plot of {comp} Price", ax=axs[0,i])
+    axs[0,i].set_ylim((-0.15, 1.1))
+    axs[0,i].axhline(c_i, linestyle="--", c="purple")
+    axs[0,i].axhline(-c_i, linestyle="--", c="purple")
+    plot_acf(u[comp], alpha=None, c=col[i], 
+             title=f"ACF Plot of {comp} Return", ax=axs[1,i])
+    axs[1,i].set_ylim((-0.15, 1.1))
+    axs[1,i].axhline(c_i, linestyle="--", c="purple")
+    axs[1,i].axhline(-c_i, linestyle="--", c="purple")
+    plot_acf(u[comp]**2, alpha=None, c=col[i], 
+             title=f"ACF Plot of {comp} Squared Return", ax=axs[2,i])
+    axs[2,i].set_ylim((-0.15, 1.1))
+    axs[2,i].axhline(c_i, linestyle="--", c="purple")
+    axs[2,i].axhline(-c_i, linestyle="--", c="purple")
 
-plot_acf(d.CK, alpha=None, c="green", title="ACF Plot of CK Price", ax=axs[0,2])
-plot_acf(u.CK, alpha=None, c="green", title="ACF Plot of CK Return", ax=axs[1,2])
-plot_acf(u.CK**2, alpha=None, c="green", title="ACF Plot of Squared CK Return", ax=axs[2,2])
 plt.tight_layout()
 fig.savefig("../Picture/Stock ACF Plot.png", dpi=200)
 
 #%%
-# np.random.seed(4012)
-# mu_180 = np.mean(u_180)
-# S_180 = np.cov(u_180, rowvar=False)
-# C_180 = np.linalg.cholesky(S_180)
-# s0 = d.iloc[-1,:]
-# s_pred = []
-# for i in range(90):
-#     z = np.random.randn(3)
-#     v = mu_180 + C_180.T @ z
-#     s1 = s0 * (1 + v)
-#     s_pred.append(s1.values)
-#     s0 = s1
+np.random.seed(4012)
+mu_180 = np.mean(u_180)
+S_180 = np.cov(u_180, rowvar=False)
+C_180 = np.linalg.cholesky(S_180)
+s0 = d.iloc[-1,:]
+s_pred = []
+for i in range(90):
+    z = np.random.randn(3)
+    v = mu_180 + C_180.T @ z
+    s1 = s0 * (1 + v)
+    s_pred.append(s1.values)
+    s0 = s1
 
-# df_pred = pd.DataFrame(np.array(s_pred), 
-#                        columns=d.columns.values + "_pred")
-# df_pred.index = np.arange(len(d)+1, len(d)+90+1)
+df_pred = pd.DataFrame(np.array(s_pred), 
+                        columns=d.columns.values + "_pred")
+df_pred.index = np.arange(len(d)+1, len(d)+90+1)
+d.index = np.arange(len(d))
 
-# d.index = np.arange(len(d))
-# pd.merge(d, df_pred, how='outer', left_index=True, 
-#          right_index=True).plot(figsize=(10, 7))
-# plt.tight_layout()
-# plt.savefig("../Picture/Stock Prediction.png", dpi=200)
+col = ["blue", "orange", "green", "pink", "brown", "red"]
+pd.merge(d, df_pred, how='outer', left_index=True, 
+          right_index=True).plot(figsize=(10, 7), color=col)
+plt.tight_layout()
+plt.savefig("../Picture/Stock Prediction.png", dpi=200)

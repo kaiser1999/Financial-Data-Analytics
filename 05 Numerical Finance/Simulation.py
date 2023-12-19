@@ -22,7 +22,7 @@ plt.hist(pse_sample, ec='black', bins="sturges",
 plt.hist(built_in_sample, ec='black', bins="sturges", 
          alpha=0.7, label="Numpy Generator")
 plt.legend(loc='upper right')
-plt.show()
+plt.savefig("../Picture/prnguni.png", dpi=200)
 
 #%%
 
@@ -39,14 +39,14 @@ def pseudo_exp_gen(lamb, seed=123456789, size=1, burn_in=1000):
 pse_sample = pseudo_exp_gen(lamb=1, size=10000)
 built_in_sample = np.random.exponential(1, size=10000)
 plt.figure(figsize=(8,6))
-plt.hist(pse_sample, ec='black', bins="sturges", 
-         alpha=0.7, label="Pseudo Generator")
-plt.hist(built_in_sample, ec='black', bins="sturges", 
-         alpha=0.7, label="Numpy Generator")
+_, bins, _ = plt.hist(pse_sample, alpha=0.7, label="Pseudo Generator", 
+                      color="blue", ec='black', bins="sturges")
+plt.hist(built_in_sample, alpha=0.7, label="Numpy Generator", 
+         color="red", ec='black', bins=bins)
 x = np.linspace(expon.ppf(0.01), expon.ppf(0.99), 10000)
 plt.plot(x, expon.pdf(x)*10000)
 plt.legend(loc='upper right')
-plt.show()
+plt.savefig("../Picture/prngexp.png", dpi=200)
 
 #%%
 
@@ -65,9 +65,9 @@ def pseudo_normal_gen(mu=0.0, sigma=1.0, seed=123456789,
 pse_sample = pseudo_normal_gen(mu=0, sigma=1, size=10000)
 built_in_sample = np.random.normal(0, 1, size=10000)
 plt.figure(figsize=(8,6))
-plt.hist(pse_sample, ec='black', bins="sturges", 
-         alpha=0.7, label="Pseudo Generator")
-plt.hist(built_in_sample, ec='black', bins="sturges", 
-         alpha=0.7, label="Numpy Generator")
+_, bins, _ = plt.hist(pse_sample, alpha=0.7, label="Pseudo Generator", 
+                      color="blue", ec='black', bins="sturges")
+plt.hist(built_in_sample, alpha=0.7, label="Numpy Generator", 
+         color="red", ec='black', bins=bins)
 plt.legend()
-plt.show()
+plt.savefig("../Picture/prngnorm.png", dpi=200)
