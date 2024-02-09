@@ -1,0 +1,42 @@
+Itos Lemma
+
+10 pages trim to 1 page
+
+section 3.3
+Higher Dimensional It^o Formula:
+
+taylor expansion dt = (dW)2
+
+#%%
+
+increase M sizes for CEV convergence
+
+Asian call BS S_T as control variate (check if CEV can do)
+
+check if pathwise > likelihood > finite
+
+Courtesy: MNIST
+
+EM: Unsupervised learning
+
+PCA (9.8 facial recognition) + logistic on MNIST
+
+why use gibbs sampling
+
+Single MH algo vs MH algo
+
+state continuum acceptance probability (cite back formulas)
+
+Kelly put back boolinger band trading strategy.
+
+ACF (MA: cutoff; AR exponential decay) and PACF (MA: exponential decay; MA: cutoff) definition
+
+Rerun 2006 to 2008 (financial distress copula errors)
+
+Chapter 9 IU picture, Netflix
+
+horse racing with PCA
+
+SVM duality check with ML
+
+CAPM compute beta for three sectors and use K means. Old HK data, 1999-2002, banking, energy, properties

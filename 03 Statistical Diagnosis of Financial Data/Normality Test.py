@@ -7,8 +7,15 @@ import statsmodels.api as sm
 d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
 
-d.plot(subplots=True, layout=(3,1), figsize=(10, 10))
-u.plot(subplots=True, layout=(3,1), sharey=True, figsize=(10, 10))
+fig, ax = plt.subplots(1, 1)
+d.plot(subplots=True, layout=(3,1), figsize=(10, 11), ax=ax)
+fig.tight_layout()
+fig.savefig("../Picture/Stock price.png", dpi=200)
+
+fig, ax = plt.subplots(1, 1)
+u.plot(subplots=True, layout=(3,1), figsize=(10, 11), ax=ax)
+fig.tight_layout()
+fig.savefig("../Picture/Stock return.png", dpi=200)
 
 fig, axs = plt.subplots(3, 2, figsize=(10,15))
 col = ["blue", "orange", "green"]
@@ -103,13 +110,14 @@ t_CK = u.CK/np.std(u.CK, ddof=1)*np.sqrt(df_CK/(df_CK-2))
 print(stats.kstest(t_CK, stats.t.cdf, args=(df_CK,), method="asymp"))
 
 #%%
+'''
 t_HSBC = (u.HSBC - np.mean(u.HSBC))/np.std(u.HSBC, ddof=1)
 print(stats.kstest(t_HSBC, stats.t.cdf, args=(df_HSBC,), method="asymp"))
 t_CLP = (u.CLP - np.mean(u.CLP))/np.std(u.CLP, ddof=1)
 print(stats.kstest(t_CLP, stats.t.cdf, args=(df_CLP,), method="asymp"))
 t_CK = (u.CK - np.mean(u.CK))/np.std(u.CK, ddof=1)
 print(stats.kstest(t_CK, stats.t.cdf, args=(df_CK,), method="asymp"))
-
+'''
 #%%
 n = 180
 u_180 = u.iloc[len(u)-n:, :]
@@ -217,6 +225,7 @@ d.index = np.arange(len(d))
 
 col = ["blue", "orange", "green", "pink", "brown", "red"]
 pd.merge(d, df_pred, how='outer', left_index=True, 
-          right_index=True).plot(figsize=(10, 7), color=col)
+         right_index=True).plot(figsize=(10, 7), color=col)
+
 plt.tight_layout()
 plt.savefig("../Picture/Stock Prediction.png", dpi=200)

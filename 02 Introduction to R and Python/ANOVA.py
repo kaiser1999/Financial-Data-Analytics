@@ -56,18 +56,9 @@ ax3.hist(Chosen_FTSE.log_return, bins="sturges", ec='black')
 plt.tight_layout()
 fig.savefig(f"../Picture/Index log_return histogram {start_year}_{end_year}.png", dpi=200)
 
-import scipy.stats as stats
-
-u1, u2, u3 = Chosen_SPX.log_return, Chosen_HSI.log_return, Chosen_FTSE.log_return
-print(stats.kstest(u1, 'norm', args=(np.mean(u1), np.std(u1, ddof=1)), 
-                   method="asymp"))
-print(stats.kstest(u2, 'norm', args=(np.mean(u2), np.std(u2, ddof=1)), 
-                   method="asymp"))
-print(stats.kstest(u3, 'norm', args=(np.mean(u3), np.std(u3, ddof=1)), 
-                   method="asymp"))
-
 #%%
 import seaborn as sns
+import scipy.stats as stats
 from statsmodels.stats.multicomp import MultiComparison
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22,7))
@@ -160,18 +151,9 @@ ax3.hist(Chosen_FTSE.log_return, bins="sturges", ec='black')
 plt.tight_layout()
 fig.savefig(f"../Picture/Index log_return histogram {start_year}_{end_year}.png", dpi=200)
 
-import scipy.stats as stats
-
-u1, u2, u3 = Chosen_SPX.log_return, Chosen_HSI.log_return, Chosen_FTSE.log_return
-print(stats.kstest(u1, 'norm', args=(np.mean(u1), np.std(u1, ddof=1)), 
-                   method="asymp"))
-print(stats.kstest(u2, 'norm', args=(np.mean(u2), np.std(u2, ddof=1)), 
-                   method="asymp"))
-print(stats.kstest(u3, 'norm', args=(np.mean(u3), np.std(u3, ddof=1)), 
-                   method="asymp"))
-
 #%%
 import seaborn as sns
+import scipy.stats as stats
 from statsmodels.stats.multicomp import MultiComparison
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22,7))

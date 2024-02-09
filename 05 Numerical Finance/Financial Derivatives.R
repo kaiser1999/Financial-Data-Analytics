@@ -1,73 +1,96 @@
 # Initialize variables
-S_0 <- 10; q <- 0; sigma <- 0.7; r <- 0; T <- 1; K <- 8; h <- 0.3
+S_0 <- 10; K <- 8; sigma <- 0.3; r <- 0.03; T <- 1
+h_delta <- seq(0.1, 0.5, by=0.1); h_vega <- seq(0.01, 0.05, by=0.01)
+n <- 1e5; M <- 1e4
+# Do not take large h on vega, since sigma < 1 !
 
 # Compute the exact Delta and Vega
-d_plus <- (log(S_0/K) + (r-q+sigma^2/2)*T) / (sigma*sqrt(T))
+d_plus <- (log(S_0/K) + (r+sigma^2/2)*T) / (sigma*sqrt(T))
 (exact_delta <- pnorm(d_plus))
 (exact_vega <- S_0 * sqrt(T) * dnorm(d_plus))
 
 ################################################################################
-set.seed(4002)
-# Create a data frame to store results
-results <- data.frame(n=numeric(0), exact_delta=numeric(0), 
-                      exact_vega=numeric(0), 
-                      est_delta_forward=numeric(0), 
-                      est_vega_forward=numeric(0), 
-                      est_delta_central=numeric(0), 
-                      est_vega_central=numeric(0))
-
-sim_call <- function(n, S_0, q, sigma, r, T, K){
-  # Generate the Black-Scholes sample
-  S_T <- S_0 * exp(do.call(rnorm, c(n, list(mean=(r-q-sigma^2/2)*T, 
-                                            sd=sigma*sqrt(T)))))
-  return (exp(-r * T) * mean(pmax(S_T - K, 0)))
-}
-
-n_size <- c(1e6, 1e8)
-# Estimate Delta and Vega using forward and central difference 
-# with different n
-for (n in n_size) {
-  Y_bar <- sim_call(n, S_0, q, sigma, r, T, K)
+### Finite Difference ###
+################################################################################
+Sim_greek <- function(h_d, h_v, n, S_0, K, r, sigma, T, theta, M=1){
+  Euro_call_Ext <- function(z, S_0, K, r, sigma, theta=2){
+    S_t <- S_0 * exp((r-sigma^2/2)*T + sigma*sqrt(T)*z)
+    mean(exp(-r*T) * pmax(S_t - K, 0))
+  }
+  
+  delta_t <- T / M
+  Milstein <- function(z, S_t, theta, r, sigma){
+    (S_t*(1 + r*delta_t) + sigma*S_t^(theta/2)*sqrt(delta_t)*z + 
+       sigma^2*theta/2*S_t^(theta-1)*delta_t/2*(z^2-1))
+  }
+  
+  Euro_call_Mil <- function(z, S_0, K, r, sigma, theta){
+    S_t <- S_0
+    for (m in 1:M){
+      S_t <- Milstein(z[m,], S_t, theta, r, sigma)
+    }
+    mean(exp(-r*T) * pmax(S_t - K, 0))
+  }
+  
+  if (theta == 2){
+    z <- rnorm(n)
+    call_type <- Euro_call_Ext
+  } else{
+    z <- matrix(rnorm(n * M), nrow=M)
+    call_type <- Euro_call_Mil
+  }
+  
+  Y <- call_type(z, S_0, K, r, sigma, theta)
   
   # Estimate Delta using forward and central difference method
-  Y_bar_S0_minus_h <- sim_call(n, S_0-h, q, sigma, r, T, K)
-  Y_bar_S0_plus_h <- sim_call(n, S_0+h, q, sigma, r, T, K)
+  Y_S0_minus <- call_type(z, S_0-h_d, K, r, sigma, theta)
+  Y_S0_plus <- call_type(z, S_0+h_d, K, r, sigma, theta)
   
-  est_delta_forward <- (Y_bar_S0_plus_h - Y_bar) / h
-  est_delta_central<- (Y_bar_S0_plus_h - Y_bar_S0_minus_h) / (2*h)
+  est_delta_forward <- (Y_S0_plus - Y) / h_d
+  est_delta_central <- (Y_S0_plus - Y_S0_minus) / (2*h_d)
   
   # Estimate Vega using forward and central difference method
-  Y_bar_sigma_minus_h <- sim_call(n, S_0, q, sigma-h, r, T, K)
-  Y_bar_sigma_plus_h <- sim_call(n, S_0, q, sigma+h, r, T, K)
+  Y_sigma_minus <- call_type(z, S_0, K, r, sigma-h_v, theta)
+  Y_sigma_plus <- call_type(z, S_0, K, r, sigma+h_v, theta)
+ 
+  est_vega_forward <- (Y_sigma_plus - Y)/h_v
+  est_vega_central <- (Y_sigma_plus - Y_sigma_minus)/(2*h_v)
   
-  est_vega_forward <- (Y_bar_sigma_plus_h - Y_bar)/h
-  est_vega_central<- (Y_bar_sigma_plus_h - Y_bar_sigma_minus_h)/(2*h)
-  
-  # Store the results in the data frame
-  output <- data.frame(h=h, n=n, exact_delta=exact_delta, 
-                       est_delta_forward=est_delta_forward, 
-                       est_delta_central=est_delta_central,
-                       exact_vega=exact_vega,
-                       est_vega_forward=est_vega_forward, 
-                       est_vega_central=est_vega_central)
-  results <- rbind(results, output)
+  list(est_delta=list(forward=est_delta_forward,
+                      central=est_delta_central),
+       est_vega=list(forward=est_vega_forward,
+                     central=est_vega_central))
 }
 
 ################################################################################
-# Subset results for Delta 
-(delta_results <- results[, c(1,2,3,4,5)])
+# Estimate Delta and Vega using forward and central difference 
+# with different h
+theta_lst <- c(2, 1, 1.8)
+for (theta in theta_lst){
+  results_delta <- data.frame(h=h_delta, n=n, theta=theta, 
+                              est_delta_forward=0, est_delta_central=0)
+  
+  results_vega <- data.frame(h=h_vega, n=n, theta=theta, 
+                             est_vega_forward=0, est_vega_central=0)
+  
+  set.seed(4002)
+  for (i in 1:length(h_delta)) {
+    h_d <- h_delta[i]; h_v <- h_vega[i]
+    
+    Euro_BS <- Sim_greek(h_d, h_v, n, S_0, K, r, sigma, T, 
+                         theta=theta, M=M)
+    results_delta$est_delta_forward[i] <- Euro_BS$est_delta$forward
+    results_delta$est_delta_central[i] <- Euro_BS$est_delta$central
+    results_vega$est_vega_forward[i] <- Euro_BS$est_vega$forward
+    results_vega$est_vega_central[i] <- Euro_BS$est_vega$central
+  }
+  
+  print(results_delta)
+  print(results_vega)
+}
 
-# Relative error 
-abs(results$est_delta_forward - exact_delta) / exact_delta * 100
-abs(results$est_delta_central - exact_delta) / exact_delta * 100
-
-# Subset results for Vega
-(vega_results <- results[, c(1,2,6,7,8)])
-
-# Relative error 
-abs(results$est_vega_forward - exact_vega) / exact_vega * 100
-abs(results$est_vega_central - exact_vega) / exact_vega * 100
-
+################################################################################
+### Pathwise + Likelihood ###
 ################################################################################
 set.seed(4002)
 

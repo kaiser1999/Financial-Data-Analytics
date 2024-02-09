@@ -57,12 +57,6 @@ hist(Chosen_HSI$log_return, breaks=20, xlab="HSI", cex.lab=1.5, cex.axis=1.5,
 hist(Chosen_FTSE$log_return, breaks=20, xlab="FTSE", cex.lab=1.5, cex.axis=1.5,
      cex.main=1.5, main=paste0("FTSE daily log-return.", year_name))
 
-u1 <- Chosen_SPX$log_return; u2 <- Chosen_HSI$log_return
-u3 <- Chosen_FTSE$log_return
-ks.test(u1, y=pnorm, mean=mean(u1), sd=sd(u1))
-ks.test(u2, y=pnorm, mean=mean(u2), sd=sd(u2))
-ks.test(u3, y=pnorm, mean=mean(u3), sd=sd(u3))
-
 ################################################################################
 par(mfrow=c(1,3))
 boxplot(Chosen_SPX$log_return, Chosen_HSI$log_return, Chosen_FTSE$log_return, 
@@ -134,12 +128,6 @@ hist(Chosen_HSI$log_return, breaks=20, xlab="HSI", cex.lab=1.5, cex.axis=1.5,
      cex.main=1.5, main=paste0("HSI daily log-return.", year_name))
 hist(Chosen_FTSE$log_return, breaks=20, xlab="FTSE", cex.lab=1.5, cex.axis=1.5,
      cex.main=1.5, main=paste0("FTSE daily log-return.", year_name))
-
-u1 <- Chosen_SPX$log_return; u2 <- Chosen_HSI$log_return
-u3 <- Chosen_FTSE$log_return
-ks.test(u1, y=pnorm, mean=mean(u1), sd=sd(u1))
-ks.test(u2, y=pnorm, mean=mean(u2), sd=sd(u2))
-ks.test(u3, y=pnorm, mean=mean(u3), sd=sd(u3))
 
 ################################################################################
 par(mfrow=c(1,3))

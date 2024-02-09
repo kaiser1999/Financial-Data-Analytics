@@ -5,35 +5,33 @@ import matplotlib.pyplot as plt
 
 d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
 returns = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
+n_days, n_stocks = returns.shape
 n_sim = int(1e5)
 
-# Q-Q plot for empirical marginals
+# compute pseudo observations
+from scipy.stats import rankdata
+pse_u = rankdata(returns, method='average', axis=0) / (n_days + 1)
+
+# Q-Q plot for pseudo observations
 col = ["blue", "orange", "green"]
-n_days, n_stocks = returns.shape
-i = (np.arange(1, n_days + 1) - 0.5) / n_days
+q = (np.arange(1, n_days + 1) - 0.5) / n_days
 fig, axes = plt.subplots(ncols=n_stocks, figsize=(10*n_stocks, 10))
 for k in range(n_stocks):
-    returns_k = returns.iloc[:,k]
-    q = np.quantile(returns_k, i, method='interpolated_inverted_cdf')
+    pse_u_k = pse_u[:,k]
     com = returns.columns[k]
     b, w = np.linalg.lstsq(np.c_[np.ones(n_days), q], 
-                           np.sort(returns_k), rcond=None)[0]
-    axes[k].scatter(q, np.sort(returns_k), color=col[k],
+                           np.sort(pse_u_k), rcond=None)[0]
+    axes[k].scatter(q, np.sort(pse_u_k), color=col[k],
                 facecolor="white", marker="o", s=50)
     axes[k].plot(q, w*q + b, color="blue", linewidth=2)
-    axes[k].set_xlabel("Empirical quantiles", fontsize=15)
-    axes[k].set_ylabel("Returns quantiles", fontsize=15)
-    axes[k].set_title(f"Q-Q Plot with {com}'s returns", fontsize=20)
+    axes[k].set_xlabel("Theoretical quantiles", fontsize=15)
+    axes[k].set_ylabel("Sample quantiles", fontsize=15)
+    axes[k].set_title(f"Q-Q Plot of {com}", fontsize=20)
 
 fig.tight_layout()
-fig.savefig("../Picture/Empirical_Marginals.png", dpi=200)
+fig.savefig("../Picture/Pseudo_Marginals.png", dpi=200)
 
-from statsmodels.distributions.empirical_distribution import ECDF
-def empirical_marginals(x):
-    return np.apply_along_axis(lambda z: ECDF(z, side="left")(z), 
-                               axis=0, arr=x)
-
-def empirical_quantile(p, samples):
+def pseudo_quantile(p, samples):
     p, samples = np.array(p), np.array(samples)
     q = np.empty(p.shape)
     for k in range(p.shape[1]):
@@ -42,14 +40,11 @@ def empirical_quantile(p, samples):
     
     return q
 
-# using empirical as the marginal distribution
-emp_u = empirical_marginals(returns)
-    
 #%%
 from copulae import NormalCopula
 
 N_cop_dist = NormalCopula(dim=len(d.columns))
-N_cop_dist.fit(emp_u, verbose=0)
+N_cop_dist.fit(pse_u, verbose=0, to_pobs=False)
 # Generate random samples based on gaussian copula
 u_sim_N = pd.DataFrame(N_cop_dist.random(n_sim, seed=4002),
                        columns=returns.columns)
@@ -60,17 +55,17 @@ print(np.corrcoef(u_sim_N, rowvar=False, ddof=1))
 print(np.corrcoef(returns, rowvar=False, ddof=1))
 
 plt.tight_layout()
-#plt.savefig("../Picture/Gaussian_sample_Copula.png", dpi=200)
+plt.savefig("../Picture/Gaussian_sample_Copula.png", dpi=200)
 
 # Get back returns based on the random samples
-return_sim_N = pd.DataFrame(empirical_quantile(u_sim_N, returns), 
+return_sim_N = pd.DataFrame(pseudo_quantile(u_sim_N, returns), 
                             columns=returns.columns)
 # only plot the first 1000 samples
 sns.pairplot(return_sim_N[1:1000], diag_kind="kde", 
              plot_kws={'alpha': 0.5, 'color': 'green'})
 
 plt.tight_layout()
-#plt.savefig("../Picture/Gaussian_Copula.png", dpi=200)
+plt.savefig("../Picture/Gaussian_Copula.png", dpi=200)
 #%%
 def Mahalanobis2(X):
     X = np.array(X)
@@ -86,15 +81,12 @@ def QQ_Plot(sim_data, raw_data, col="blue"):
     q = np.quantile(sim_data, i, method='interpolated_inverted_cdf')
     
     fig = plt.figure(figsize=(10, 10))
-    b, w = np.linalg.lstsq(np.c_[np.ones(n_days), q], 
-                           np.sort(raw_data), rcond=None)[0]
     plt.scatter(q, np.sort(raw_data), color=col,
-                    facecolor="white", marker="o", s=50)
-    plt.plot(q, w*q + b, color="blue", linewidth=2)
-    plt.xlabel("Empirical copula quantiles", fontsize=15)
-    plt.ylabel("Returns quantiles", fontsize=15)
-    plt.title("Squared Mahalanobis Q-Q Plot with empirical marginals", 
-              fontsize=20)
+                facecolor="white", marker="o", s=50)
+    plt.axline([0, 0], [1, 1], color=col, linewidth=2)
+    plt.xlabel("Bootstrapped quantiles", fontsize=15)
+    plt.ylabel("Sample quantiles", fontsize=15)
+    plt.title("Copula Q-Q Plot", fontsize=20)
     
     return fig
 
@@ -105,7 +97,7 @@ sim_N_md2 = Mahalanobis2(return_sim_N)
 fig = QQ_Plot(sim_N_md2, returns_md2, col="blue")
 
 fig.tight_layout()
-fig.savefig("../Picture/Empirical N QQ Plot.png", dpi=200)
+fig.savefig("../Picture/Pseudo N QQ Plot.png", dpi=200)
 
 from scipy import stats
 
@@ -126,7 +118,7 @@ plt.savefig("../Picture/MVN Chi2 Plot.png", dpi=200)
 from copulae import StudentCopula
 
 t_cop_dist = StudentCopula(dim=len(d.columns))
-t_cop_dist.fit(emp_u, verbose=0)
+t_cop_dist.fit(pse_u, verbose=0, to_pobs=False)
 print(t_cop_dist.params.rho)
 print(t_cop_dist.params.df)
 
@@ -141,7 +133,7 @@ plt.tight_layout()
 plt.savefig("../Picture/t_sample_Copula.png", dpi=200)
 
 # Get back returns based on the random samples
-return_sim_t = pd.DataFrame(empirical_quantile(u_sim_t, returns), 
+return_sim_t = pd.DataFrame(pseudo_quantile(u_sim_t, returns), 
                             columns=returns.columns)
 # only plot the first 1000 samples
 sns.pairplot(return_sim_t[1:1000], diag_kind="kde", 
@@ -155,7 +147,7 @@ sim_t_md2 = Mahalanobis2(return_sim_t)
 fig = QQ_Plot(sim_t_md2, returns_md2, col="orange")
 
 fig.tight_layout()
-fig.savefig("../Picture/Empirical t QQ Plot.png", dpi=200)
+fig.savefig("../Picture/Pseudo t QQ Plot.png", dpi=200)
 
 #%%
 n_days = len(returns)
@@ -163,20 +155,82 @@ i = (np.arange(1, n_days + 1) - 0.5) / n_days
 q_N = np.quantile(sim_N_md2, i, method='interpolated_inverted_cdf')
 q_t = np.quantile(sim_t_md2, i, method='interpolated_inverted_cdf')
 
-b_N, w_N = np.linalg.lstsq(np.c_[np.ones(n_days), q_N], 
-                           np.sort(returns_md2), rcond=None)[0]
-b_t, w_t = np.linalg.lstsq(np.c_[np.ones(n_days), q_t], 
-                           np.sort(returns_md2), rcond=None)[0]
-
-r2_N = (np.sort(returns_md2) - (b_N + w_N*q_N))**2
-r2_t = (np.sort(returns_md2) - (b_t + w_t*q_t))**2
-
-fig = plt.figure(figsize=(10, 10), dpi=200)
-# plot theoretical quantiles starting from 10
-idx_start = min(min(np.where(q_N>10)[0]), min(np.where(q_t>10)[0]))
+a = 15
+# find the common index where both coordinates > a
+sort_returns_md2 = np.sort(returns_md2)
+idx = set.intersection(set(np.where(q_N>a)[0]), 
+                       set(np.where(q_t>a)[0]),
+                       set(np.where(sort_returns_md2>a)[0]))
+idx_start = min(idx)
 print(idx_start)
-plt.plot(np.sort(r2_N[idx_start:-1]), "ro", markersize=10)
-plt.plot(np.sort(r2_t[idx_start:-1]), "bx", markersize=10)
+
+fig, ax = plt.subplots(figsize=(10, 10), dpi=200)
+# skip the largest (last) entry
+ax.scatter(q_N[idx_start:], sort_returns_md2[idx_start:], 
+            color="blue", facecolor="white", marker="o", s=50)
+ax.plot(q_t[idx_start:], sort_returns_md2[idx_start:], 
+        "x", color="orange", markersize=10)
+x = np.linspace(*ax.get_xlim())
+ax.plot(x, x, color="black", linewidth=2)
+ax.set_xlabel("Bootstrapped quantiles", fontsize=15)
+ax.set_ylabel("Sample quantiles", fontsize=15)
+ax.set_title("Copula Q-Q Plot", fontsize=20)
+ax.legend(["Gaussian copula", "t-copula"], fontsize=15)
+
+fig.tight_layout()
+fig.savefig("../Picture/Pseudo QQ Plot.png", dpi=200)
+
+# residuals with respect to the 45-degree line
+resid2_N = (sort_returns_md2 - q_N)**2
+resid2_t = (sort_returns_md2 - q_t)**2
+
+#%%
+fig = plt.figure(figsize=(10, 10), dpi=200)
+# plot the largest 50 and skip the largest (last) entry
+plt.plot(np.sort(resid2_N)[-50:-1], "bo", 
+         markerfacecolor="white", markersize=10)
+plt.plot(np.sort(resid2_t)[-50:-1], "x", color="orange", markersize=10)
 plt.xlabel("Index", fontsize=15)
 plt.ylabel("Squared residuals", fontsize=15)
 plt.legend(["Gaussian copula", "t-copula"], fontsize=15)
+
+plt.tight_layout()
+fig.savefig("../Picture/Squared residuals plot 49.png", dpi=200)
+
+#%%
+fig = plt.figure(figsize=(10, 10), dpi=200)
+# plot the largest 50
+plt.plot(np.sort(resid2_N)[-50:], "bo", 
+         markerfacecolor="white", markersize=10)
+plt.plot(np.sort(resid2_t)[-50:], "x", color="orange", markersize=10)
+plt.xlabel("Index", fontsize=15)
+plt.ylabel("Squared residuals", fontsize=15)
+plt.legend(["Gaussian copula", "t-copula"], fontsize=15)
+
+plt.tight_layout()
+fig.savefig("../Picture/Squared residuals plot.png", dpi=200)
+
+#%%
+fig, ax = plt.subplots(figsize=(10, 10), dpi=200)
+# skip the largest (last) entry
+ax.scatter(q_N[idx_start:], sort_returns_md2[idx_start:], 
+            color="blue", facecolor="white", marker="o", s=50)
+ax.plot(q_t[idx_start:], sort_returns_md2[idx_start:], 
+        "x", color="orange", markersize=10)
+x = np.linspace(*ax.get_xlim())
+ax.plot(x, x, color="black", linewidth=2)
+ax.set_xlabel("Bootstrapped quantiles", fontsize=15)
+ax.set_ylabel("Sample quantiles", fontsize=15)
+ax.set_title("Copula Q-Q Plot", fontsize=20)
+ax.legend(["Gaussian copula", "t-copula"], fontsize=15)
+
+b_N, w_N = np.linalg.lstsq(np.vstack([np.ones(n_days), q_N]).T, 
+                           sort_returns_md2, rcond=None)[0]
+ax.plot(x, w_N*x + b_N, color="blue", linewidth=2)
+
+b_t, w_t = np.linalg.lstsq(np.vstack([np.ones(n_days), q_t]).T, 
+                           sort_returns_md2, rcond=None)[0]
+ax.plot(x, w_t*x + b_t, color="orange", linewidth=2)
+
+fig.tight_layout()
+fig.savefig("../Picture/Pseudo QQ Plot with references.png", dpi=200)

@@ -78,8 +78,8 @@ plt.plot(LSTM_close, color='pink', linestyle='dashed',
 skip_days = len(y_close_test)//10
 plt.xticks(np.arange(0, len(y_close_test), skip_days), 
            xticks[::skip_days])
-plt.title(f'''Bitcoin Price Prediction on 
-          {date_val.date[0]}''', fontsize=20)
+plt.title('Bitcoin Price Prediction on ' + 
+          f'{date_val.date[0]}', fontsize=20)
 plt.xlabel('Date', fontsize=15)
 plt.ylabel('Price', fontsize=15)
 plt.legend()
