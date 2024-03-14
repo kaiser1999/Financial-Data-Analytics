@@ -79,10 +79,11 @@ ax2.set_title("Mean Plot with 95% CI." + year_name, fontsize=20)
 ax2.set_xlabel("Index", fontsize=15)
 ax2.set_ylabel("Daily log-return", fontsize=15)
 
-F, p = stats.f_oneway(Chosen_SPX.log_return, Chosen_HSI.log_return, 
-                      Chosen_FTSE.log_return)
-# Reject the null hypothesis?
-print(p < 0.05)
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+index_lm = ols('log_return ~ Index', data=AllIndex).fit()
+print(sm.stats.anova_lm(index_lm, typ=2))
 
 comp = MultiComparison(data=AllIndex.log_return, groups=AllIndex.Index, 
                        group_order=["SPX", "HSI", "FTSE"])
@@ -115,14 +116,14 @@ print(df)
 Within_group_MSE = (SSE_SPX + SSE_HSI + SSE_FTSE) / df
 print(Within_group_MSE)
 
-# Harmonic mean used for the two sample sizes
-SPX_HSI_SE_ANOVA = np.sqrt(Within_group_MSE / (2/(1/n_SPX + 1/n_HSI)))
-FTSE_SPX_SE_ANOVA = np.sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_SPX)))
-FTSE_HSI_SE_ANOVA = np.sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_HSI)))
+SPX_HSI_SE_ANOVA = np.sqrt(Within_group_MSE * (1/n_SPX + 1/n_HSI))
+FTSE_SPX_SE_ANOVA = np.sqrt(Within_group_MSE * (1/n_FTSE + 1/n_SPX))
+FTSE_HSI_SE_ANOVA = np.sqrt(Within_group_MSE * (1/n_FTSE + 1/n_HSI))
 
-SPX_vs_HSI = np.abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA
-FTSE_vs_SPX = np.abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA
-FTSE_vs_HSI = np.abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA
+# q_Tukey = sqrt(2) t
+SPX_vs_HSI = np.abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA * np.sqrt(2)
+FTSE_vs_SPX = np.abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA * np.sqrt(2)
+FTSE_vs_HSI = np.abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA * np.sqrt(2)
 
 from statsmodels.stats.libqsturng import psturng
 
@@ -174,10 +175,11 @@ ax2.set_title("Mean Plot with 95% CI." + year_name, fontsize=20)
 ax2.set_xlabel("Index", fontsize=15)
 ax2.set_ylabel("Daily log-return", fontsize=15)
 
-F, p = stats.f_oneway(Chosen_SPX.log_return, Chosen_HSI.log_return, 
-                      Chosen_FTSE.log_return)
-# Reject the null hypothesis?
-print(p < 0.05)
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+
+index_lm = ols('log_return ~ Index', data=AllIndex).fit()
+print(sm.stats.anova_lm(index_lm, typ=2))
 
 comp = MultiComparison(data=AllIndex.log_return, groups=AllIndex.Index, 
                        group_order=["SPX", "HSI", "FTSE"])
@@ -210,14 +212,14 @@ print(df)
 Within_group_MSE = (SSE_SPX + SSE_HSI + SSE_FTSE) / df
 print(Within_group_MSE)
 
-# Harmonic mean used for the two sample sizes
-SPX_HSI_SE_ANOVA = np.sqrt(Within_group_MSE / (2/(1/n_SPX + 1/n_HSI)))
-FTSE_SPX_SE_ANOVA = np.sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_SPX)))
-FTSE_HSI_SE_ANOVA = np.sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_HSI)))
+SPX_HSI_SE_ANOVA = np.sqrt(Within_group_MSE * (1/n_SPX + 1/n_HSI))
+FTSE_SPX_SE_ANOVA = np.sqrt(Within_group_MSE * (1/n_FTSE + 1/n_SPX))
+FTSE_HSI_SE_ANOVA = np.sqrt(Within_group_MSE * (1/n_FTSE + 1/n_HSI))
 
-SPX_vs_HSI = np.abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA
-FTSE_vs_SPX = np.abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA
-FTSE_vs_HSI = np.abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA
+# q_Tukey = sqrt(2) t
+SPX_vs_HSI = np.abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA * np.sqrt(2)
+FTSE_vs_SPX = np.abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA * np.sqrt(2)
+FTSE_vs_HSI = np.abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA * np.sqrt(2)
 
 from statsmodels.stats.libqsturng import psturng
 

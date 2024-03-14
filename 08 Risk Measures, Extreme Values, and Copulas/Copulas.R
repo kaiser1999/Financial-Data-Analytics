@@ -2,6 +2,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################
 d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
+#d <- read.csv("../Datasets/stock_2006_2009.csv", row.names=1) # read in data file
 d <- as.ts(d)
 returns <- (lag(d) - d)/d
 colnames(returns) <- paste0(colnames(d), "_Return")
@@ -9,7 +10,7 @@ n_sim <- 1e5
 
 # compute pseudo observations
 library(copula)  # Package for copula computation
-emp_u <- pobs(returns, ties.method="average")
+pse_u <- pobs(returns, ties.method="average")
 
 par(mfrow=c(1,3))
 # Q-Q plot for pseudo observations
@@ -17,10 +18,10 @@ col <- c("blue", "orange", "green")
 n_days <- nrow(returns)
 q <- ((1:n_days) - 0.5) / n_days
 for (k in 1:ncol(returns)){
-  qqplot(q, sort(emp_u[,k]), col=col[k], 
+  qqplot(q, sort(pse_u[,k]), col=col[k], 
          xlab="Theoretical quantiles", ylab="Sample quantiles",
          main=paste0("Q-Q Plot of ", colnames(returns)[k]))
-  abline(lsfit(q, sort(emp_u[,k])), lwd=2)
+  abline(lsfit(q, sort(pse_u[,k])), lwd=2)
 }
 par(mfrow=c(1, 1))
 
@@ -36,7 +37,7 @@ pseudo_quantile <- function(p, samples){
 # Assume a normal-copula with ncol(d)=3
 # P2p: array of elements of upper triangular matrix
 N.cop <- normalCopula(dim=ncol(d), dispstr="un")
-fit <- fitCopula(N.cop, emp_u, "ml")
+fit <- fitCopula(N.cop, pse_u, "ml")
 (rho <- coef(fit))
 N.cop_fit <- normalCopula(rho, dim=ncol(d), dispstr="un")
 set.seed(4002)
@@ -83,10 +84,13 @@ q <- qchisq(i, 3)
 qqplot(q, sort(returns_md2), main="Chi2 Q-Q Plot")
 abline(lsfit(q, sort(returns_md2)))
 
+ks.test(sqrt(returns_md2), sqrt(sim_N_md2))
+ks.test(sqrt(returns_md2), "pchisq", df=3)
+
 ################################################################################
 # Assume a t-copula  with ncol(d)=3
 t.cop <- tCopula(dim=ncol(d), dispstr='un')
-fit <- fitCopula(t.cop, emp_u, "ml")
+fit <- fitCopula(t.cop, pse_u, "ml")
 (rho <- coef(fit)[1:ncol(d)])
 (df <- coef(fit)[length(coef(fit))])
 t.cop_fit <- tCopula(dim=ncol(d), rho, df=df, dispstr="un")
@@ -105,6 +109,9 @@ pairs(return_sim_t[1:1e3,], col="green")  # only show the first 1000
 sim_t_md2 <- Mahalanobis2(return_sim_t)
 QQ_Plot(sim_t_md2, returns_md2, col="orange")
 
+ks.test(sqrt(returns_md2), sqrt(sim_t_md2))
+
+#par(mfrow=c(2,2))
 ################################################################################
 n_days <- nrow(returns)
 i <- ((1:n_days) - 0.5) / n_days
@@ -129,7 +136,6 @@ legend("topleft", pch=c(1, 4), cex=1.5, lwd=c(1, 2),
        col=c("blue", "orange"), lty=0, legend=leg)
 abline(0, 1, lwd=2)
 
-################################################################################
 # residuals with respect to the 45-degree line
 sort_resid2_N <- sort((sort(returns_md2) - q_N)^2)
 sort_resid2_t <- sort((sort(returns_md2) - q_t)^2)
@@ -142,6 +148,7 @@ points(sort_resid2_t[idx_plots], pch=4, cex=1.5, lwd=2, col="orange")
 legend("topleft", pch=c(1, 4), cex=1.5, lwd=c(1, 2),
        col=c("blue", "orange"), lty=0, legend=leg)
 
+################################################################################
 sort_resid2_N <- sort((sort(returns_md2) - q_N)^2)
 sort_resid2_t <- sort((sort(returns_md2) - q_t)^2)
 # plot the largest 50

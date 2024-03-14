@@ -5,23 +5,20 @@ x = 1
 if x > 0:
 	print("x is positive")
 	print("Time to begin with machine learning!")
+    
+#%%
+import tensorflow as tf
 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
+#%%
 # Read csv in Python
 data = pd.read_csv("../Datasets/fin-ratio.csv")
 # Write csv in Python
 data.to_csv("../Datasets/fin-ratio_new.csv")
 
 #%%
-# Function in Python
-from My_Function import MyFun
-
-print(MyFun(2))
-print(MyFun(2) + 10000)
-
-# For loop in Python
-for i in range(10):
-  print(i)
-
 # Assign data to x except the label y = HSI stock or not
 x = data.drop(data.columns[-1], axis=1)
 print(data.columns[-1])
@@ -32,6 +29,17 @@ print(x.var())
 
 # Compute sample covariance matrix
 print(x.cov())
+
+#%%
+# Function in Python
+from My_Function import MyFun
+
+print(MyFun(2))
+
+#%%
+# For loop in Python
+for i in range(10):
+  print(i)
 
 #%%
 import numpy as np

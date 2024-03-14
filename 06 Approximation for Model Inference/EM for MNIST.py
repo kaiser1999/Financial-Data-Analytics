@@ -14,7 +14,6 @@ img_dim = X_train.shape[1:]             # 28x28 pixels
 N_train = len(X_train)                  # 60000 training samples
 N_test = len(X_test)                    # 10000 test samples
 
-#%%
 def loglike_func(post, prior, mu):
     loglike = 0
     mu = np.clip(mu, a_min=1e-323, a_max=1 - 1e-323)
@@ -26,7 +25,6 @@ def loglike_func(post, prior, mu):
     
     return loglike
 
-#%%
 np.random.seed(4002)
 prior = np.random.rand(M)
 prior /= np.sum(prior)
@@ -70,13 +68,12 @@ for m in range(M):
 y_hat = np.array(y_prob).argmax(axis=0)
 
 # Table of predictions and prediction accuracy
-tab = confusion_matrix(y_test, y_hat)                  # Confusion matrix
+tab = confusion_matrix(y_hat, y_test)                  # Confusion matrix
 print(tab)
 
 # No need to inter-change labels cuz mu is first initialized by class
-print(np.sum(tab.diagonal()) / len(y_test))             # Accuracy
+print(np.sum(tab.diagonal()) / len(y_test))            # Accuracy
 
-#%%
 # Plot for the log-likelihood for all 10 iterations
 plt.figure(figsize=(10, 8))
 plt.plot(np.arange(len(loglike_record))+1, loglike_record, 'x-', linewidth=3)
@@ -86,7 +83,6 @@ plt.title("BMM EM Algoritm", fontsize=15)
 plt.tight_layout()
 plt.savefig("../Picture/Python log-likelihood_BMM.png", dpi=200)
 
-#%%
 fig = plt.figure(figsize=(16, 12))
 for m in range(M):
     y = fig.add_subplot(3, 4, m+1)                      # rows, columns, index

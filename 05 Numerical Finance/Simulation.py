@@ -22,10 +22,11 @@ plt.hist(pse_sample, ec='black', bins="sturges",
 plt.hist(built_in_sample, ec='black', bins="sturges", 
          alpha=0.7, label="Numpy Generator")
 plt.legend(loc='upper right')
+
+plt.tight_layout()
 plt.savefig("../Picture/prnguni.png", dpi=200)
 
 #%%
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import expon
@@ -46,10 +47,11 @@ plt.hist(built_in_sample, alpha=0.7, label="Numpy Generator",
 x = np.linspace(expon.ppf(0.01), expon.ppf(0.99), 10000)
 plt.plot(x, expon.pdf(x)*10000)
 plt.legend(loc='upper right')
+
+plt.tight_layout()
 plt.savefig("../Picture/prngexp.png", dpi=200)
 
 #%%
-
 import numpy as np
 import matplotlib.pyplot as plt
 np.random.seed(4002)
@@ -70,4 +72,6 @@ _, bins, _ = plt.hist(pse_sample, alpha=0.7, label="Pseudo Generator",
 plt.hist(built_in_sample, alpha=0.7, label="Numpy Generator", 
          color="red", ec='black', bins=bins)
 plt.legend()
+
+plt.tight_layout()
 plt.savefig("../Picture/prngnorm.png", dpi=200)

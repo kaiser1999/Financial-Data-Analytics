@@ -3,7 +3,9 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
+period = "1999_2002"
+period = "2006_2009"
+d = pd.read_csv(f"../Datasets/stock_{period}.csv", index_col=0)
 returns = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
 n_days, n_stocks = returns.shape
 n_sim = int(1e5)
@@ -25,11 +27,11 @@ for k in range(n_stocks):
                 facecolor="white", marker="o", s=50)
     axes[k].plot(q, w*q + b, color="blue", linewidth=2)
     axes[k].set_xlabel("Theoretical quantiles", fontsize=15)
-    axes[k].set_ylabel("Sample quantiles", fontsize=15)
-    axes[k].set_title(f"Q-Q Plot of {com}", fontsize=20)
+    axes[k].set_ylabel("Returns quantiles", fontsize=15)
+    axes[k].set_title(f"Q-Q Plot with {com}'s returns", fontsize=20)
 
 fig.tight_layout()
-fig.savefig("../Picture/Pseudo_Marginals.png", dpi=200)
+fig.savefig(f"../Picture/Pseudo_Marginals_{period}.png", dpi=200)
 
 def pseudo_quantile(p, samples):
     p, samples = np.array(p), np.array(samples)
@@ -55,7 +57,7 @@ print(np.corrcoef(u_sim_N, rowvar=False, ddof=1))
 print(np.corrcoef(returns, rowvar=False, ddof=1))
 
 plt.tight_layout()
-plt.savefig("../Picture/Gaussian_sample_Copula.png", dpi=200)
+plt.savefig(f"../Picture/Gaussian_sample_Copula_{period}.png", dpi=200)
 
 # Get back returns based on the random samples
 return_sim_N = pd.DataFrame(pseudo_quantile(u_sim_N, returns), 
@@ -65,7 +67,7 @@ sns.pairplot(return_sim_N[1:1000], diag_kind="kde",
              plot_kws={'alpha': 0.5, 'color': 'green'})
 
 plt.tight_layout()
-plt.savefig("../Picture/Gaussian_Copula.png", dpi=200)
+plt.savefig(f"../Picture/Gaussian_Copula_{period}.png", dpi=200)
 #%%
 def Mahalanobis2(X):
     X = np.array(X)
@@ -97,7 +99,7 @@ sim_N_md2 = Mahalanobis2(return_sim_N)
 fig = QQ_Plot(sim_N_md2, returns_md2, col="blue")
 
 fig.tight_layout()
-fig.savefig("../Picture/Pseudo N QQ Plot.png", dpi=200)
+fig.savefig(f"../Picture/Pseudo N QQ Plot_{period}.png", dpi=200)
 
 from scipy import stats
 
@@ -112,7 +114,12 @@ plt.plot(q, w*q + b, color="blue", linewidth=2)
 plt.title("Chi2 Q-Q Plot", fontsize=20)
 
 plt.tight_layout()
-plt.savefig("../Picture/MVN Chi2 Plot.png", dpi=200)
+plt.savefig(f"../Picture/MVN Chi2 Plot_{period}.png", dpi=200)
+
+print(stats.kstest(np.sqrt(returns_md2), np.sqrt(sim_N_md2), 
+                   method="asymp"))
+print(stats.kstest(np.sqrt(returns_md2), stats.chi2.cdf, 
+                   args=(3,), method="asymp"))
 
 #%%
 from copulae import StudentCopula
@@ -130,7 +137,7 @@ sns.pairplot(u_sim_t[1:1000], diag_kind="kde",
              plot_kws={'alpha': 0.5, 'color': 'blue'})
 
 plt.tight_layout()
-plt.savefig("../Picture/t_sample_Copula.png", dpi=200)
+plt.savefig(f"../Picture/t_sample_Copula_{period}.png", dpi=200)
 
 # Get back returns based on the random samples
 return_sim_t = pd.DataFrame(pseudo_quantile(u_sim_t, returns), 
@@ -140,14 +147,17 @@ sns.pairplot(return_sim_t[1:1000], diag_kind="kde",
              plot_kws={'alpha': 0.5, 'color': 'green'})
 
 plt.tight_layout()
-plt.savefig("../Picture/t_Copula.png", dpi=200)
+plt.savefig(f"../Picture/t_Copula_{period}.png", dpi=200)
 
 #%%
 sim_t_md2 = Mahalanobis2(return_sim_t)
 fig = QQ_Plot(sim_t_md2, returns_md2, col="orange")
 
 fig.tight_layout()
-fig.savefig("../Picture/Pseudo t QQ Plot.png", dpi=200)
+fig.savefig(f"../Picture/Pseudo t QQ Plot_{period}.png", dpi=200)
+
+print(stats.kstest(np.sqrt(returns_md2), np.sqrt(sim_t_md2), 
+                   method="asymp"))
 
 #%%
 n_days = len(returns)
@@ -178,13 +188,12 @@ ax.set_title("Copula Q-Q Plot", fontsize=20)
 ax.legend(["Gaussian copula", "t-copula"], fontsize=15)
 
 fig.tight_layout()
-fig.savefig("../Picture/Pseudo QQ Plot.png", dpi=200)
+fig.savefig(f"../Picture/Pseudo QQ Plot_{period}.png", dpi=200)
 
 # residuals with respect to the 45-degree line
 resid2_N = (sort_returns_md2 - q_N)**2
 resid2_t = (sort_returns_md2 - q_t)**2
 
-#%%
 fig = plt.figure(figsize=(10, 10), dpi=200)
 # plot the largest 50 and skip the largest (last) entry
 plt.plot(np.sort(resid2_N)[-50:-1], "bo", 
@@ -195,7 +204,7 @@ plt.ylabel("Squared residuals", fontsize=15)
 plt.legend(["Gaussian copula", "t-copula"], fontsize=15)
 
 plt.tight_layout()
-fig.savefig("../Picture/Squared residuals plot 49.png", dpi=200)
+fig.savefig(f"../Picture/Squared residuals plot 49_{period}.png", dpi=200)
 
 #%%
 fig = plt.figure(figsize=(10, 10), dpi=200)
@@ -208,7 +217,7 @@ plt.ylabel("Squared residuals", fontsize=15)
 plt.legend(["Gaussian copula", "t-copula"], fontsize=15)
 
 plt.tight_layout()
-fig.savefig("../Picture/Squared residuals plot.png", dpi=200)
+fig.savefig(f"../Picture/Squared residuals plot_{period}.png", dpi=200)
 
 #%%
 fig, ax = plt.subplots(figsize=(10, 10), dpi=200)
@@ -233,4 +242,4 @@ b_t, w_t = np.linalg.lstsq(np.vstack([np.ones(n_days), q_t]).T,
 ax.plot(x, w_t*x + b_t, color="orange", linewidth=2)
 
 fig.tight_layout()
-fig.savefig("../Picture/Pseudo QQ Plot with references.png", dpi=200)
+fig.savefig(f"../Picture/Pseudo QQ Plot with references_{period}.png", dpi=200)

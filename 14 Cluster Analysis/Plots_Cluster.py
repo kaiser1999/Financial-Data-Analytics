@@ -85,11 +85,11 @@ import matplotlib.pyplot as plt
 import cv2
  
 # Read in the image
-image = cv2.imread('../Picture/image_segment.png')
+image = cv2.imread("../Picture/HK_2.jpg")
 # Change color to RGB (from BGR)
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-fig = plt.figure(figsize=(20, 30), dpi=200)
+fig = plt.figure(figsize=(30, 20), dpi=200)
 plt.gca().set_axis_off()
 plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
             hspace = 0, wspace = 0)
@@ -118,9 +118,11 @@ segmented_data = centers[labels.flatten()]
 # reshape data into the original image dimensions
 segmented_image = segmented_data.reshape((image.shape))
  
-fig = plt.figure(figsize=(20, 30), dpi=200)
+fig = plt.figure(figsize=(30, 20), dpi=200)
 plt.gca().set_axis_off()
 plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
             hspace = 0, wspace = 0)
 plt.margins(0,0)
 plt.imshow(segmented_image)
+plt.tight_layout()
+plt.savefig(f"../Picture/HK_2_5.png")

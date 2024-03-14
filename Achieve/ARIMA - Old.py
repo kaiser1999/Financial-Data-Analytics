@@ -49,51 +49,78 @@ plot_pacf(lag_price, lags=30, ax=axs[1], alpha=None, zero=False,
 axs[1].set_ylim((-0.055, 0.055))
 axs[1].axhline(c_i, linestyle="--", c="purple")
 axs[1].axhline(-c_i, linestyle="--", c="purple")
-    
+
+#%%
+# 1 lag difference; ACF and PACF: 2 significant lags and looks similar
+print(ARIMA(train_close, order=(2, 1, 0)).fit().aic)
+print(ARIMA(train_close, order=(0, 1, 2)).fit().aic)
+
 fig.tight_layout()
 fig.savefig("../Picture/ACF plots of lagged Bitcoin prices.png", dpi=200)
 
 #%%
-# auto_arima does not allow with_intercept=False even if we stated there
-'''
 import pmdarima as pm
 
-model = pm.auto_arima(train_close, max_p=5, max_q=5, max_d=2, 
-                      information_criterion="aic", seasonal=False,
-                      with_intercept=False, n_jobs=1)
-
-print(model.summary())
-'''
+best_model = pm.auto_arima(train_close, max_p=5, max_q=5, max_d=2, 
+                           information_criterion="aic", seasonal=False,
+                           stepwise=False, with_intercept=False)
+print(best_model.summary())
 
 #%%
-# 1 lag difference; ACF and PACF: 2 significant lags and looks similar
-p, d, q = 2, 1, 0
+p, d, q = best_model.order
 arima_name = f"ARIMA({p}, {d}, {q})"
 
-model =  ARIMA(train_close, order=(p, d, q))
-model_fit = model.fit()
-print(dict(zip(model_fit.param_names, np.round(model_fit.params, 6))))
-resid = model_fit.resid[1:]         # remove the first residual
+resid = best_model.resid()[1:]          # remove the first residual
+# Ljung-Box test on (non-standardized) residuals
 print(acorr_ljungbox(resid, lags=[10], model_df=p+q))
 
-sig2 = model_fit.params[-1]
 fig = plt.figure(figsize=(13,8))
-plt.plot(resid/np.sqrt(sig2), "b-")
-skip_days = len(train_close)//6
-plt.xticks(np.arange(0, len(train_close), skip_days), 
-           train_close.index[::skip_days])
-plt.title(f"Standardized Residuals of {arima_name}", fontsize=20)
+plt.plot(resid/np.sqrt(best_model.params().sigma2), "b-")
+skip_minutes = len(train_close)//6
+plt.xticks(np.arange(0, len(train_close), skip_minutes), 
+           train_close.index[::skip_minutes])
+plt.title(f"Standardized residuals of {arima_name}", fontsize=20)
 plt.ylabel("")
+
+print(np.where(abs(resid)/np.sqrt(best_model.params().sigma2) > 12)[0])
+# Python indexing starts from 0 and we removed one row from resid
+split_idx = 115698
+plt.axvline(split_idx, c="orange", linewidth=2, linestyle="--")
+# +1 for removing first row in resid and -1 for d=1
+print(train_close.index[split_idx+1-1])
 
 plt.tight_layout()
 fig.savefig("../Picture/Bitcoin Standardized Residuals.png", dpi=200)
 
 #%%
+split_train = train_close[(split_idx+1-1):]
+best_split = pm.auto_arima(split_train, max_p=10, max_q=10, max_d=2, 
+                           information_criterion="aic", seasonal=False,
+                           stepwise=False, with_intercept=False)
+print(best_split.summary())
+s_p, s_d, s_q = best_split.order
+split_arima = f"ARIMA({s_p}, {s_d}, {s_q})"
+
+split_resid = best_split.resid()[1:]     # remove the first residual
+fig = plt.figure(figsize=(13,8))
+plt.plot(split_resid/np.sqrt(best_split.params().sigma2), "b-")
+skip_minutes = len(split_train)//6
+plt.xticks(np.arange(0, len(split_train), skip_minutes), 
+           split_train.index[::skip_minutes])
+plt.title(f"Standardized residuals of {arima_name}", fontsize=20)
+plt.ylabel("")
+# Ljung-Box test on (non-standardized) residuals
+print(acorr_ljungbox(split_resid, lags=[10], model_df=s_p+s_q))
+
+plt.tight_layout()
+fig.savefig("../Picture/Bitcoin Standardized Residuals Split.png", dpi=200)
+
+#%%
 hist_data = train_close[-30:].tolist()
 arima_pred = np.empty(test_close.shape)
 for i, x_t in enumerate(test_close):
-    model = ARIMA(hist_data, order=(p, d, q))
-    model_fit = model.smooth(model_fit.params)
+    model = ARIMA(hist_data, order=(s_p, s_d, s_q))
+    model_fit = model.smooth(best_split.params())
     arima_pred[i] = model_fit.forecast()[0]
     hist_data.append(x_t)
 
@@ -102,10 +129,10 @@ xticks = date_val.strftime('%H:%M')
 
 fig = plt.figure(figsize=(13,8))
 plt.plot(test_close, color='red', label='Actual')
-plt.plot(arima_pred, color='blue', linestyle='dashed', label=arima_name)
-skip_days = len(test_close)//6
-plt.xticks(np.arange(0, len(test_close), skip_days), 
-           xticks[::skip_days])
+plt.plot(arima_pred, color='blue', linestyle='dashed', label=split_arima)
+skip_minutes = len(test_close)//6
+plt.xticks(np.arange(0, len(test_close), skip_minutes), 
+           xticks[::skip_minutes])
 plt.title('Bitcoin Price Prediction on ' + 
           f'{date_val.date[0]}', fontsize=20)
 plt.xlabel('Date', fontsize=15)

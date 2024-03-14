@@ -1,94 +1,14 @@
-from sklearn.datasets import load_iris
-import pandas as pd
 import numpy as np
+from sklearn.datasets import load_iris
 
 iris = load_iris()
 X, y = iris.data, iris.target
 
 from sklearn.neural_network import MLPRegressor
-model = MLPRegressor(hidden_layer_sizes=2, max_iter=1000, solver="lbfgs",
-                     activation="logistic", random_state=4012, alpha=0.0001)
+model = MLPRegressor(hidden_layer_sizes=2, max_iter=1000, 
+                     solver="lbfgs", activation="logistic", 
+                     random_state=1999)
 model.fit(X, y)
-y_pred = model.predict(X)
-y_pred = np.round(y_pred)
-
-from sklearn.metrics import classification_report
-print(classification_report(y, y_pred))
-print(pd.crosstab(y, y_pred))# confusion matrix
-
-print(model.loss_)
-L2 = 0.0001*(np.sum(model.coefs_[0]**2) + np.sum(model.coefs_[1]**2))
-print((np.sum((model.predict(X) - y)**2) + L2) / 2 / len(y))
-print(model.coefs_)
-print(model.intercepts_)
-
-#%%
-import pandas as pd
-import numpy as np
-
-df = pd.read_csv("../Datasets/fin-ratio.csv")
-X = df.drop(columns="HSI")
-y = df["HSI"]
-
-from sklearn.neural_network import MLPRegressor
-model = MLPRegressor(hidden_layer_sizes=2, max_iter=1000, solver="lbfgs",
-                     activation="logistic", random_state=4012)
-# let's fit the training data to our model
-model.fit(X, y)
-y_pred = model.predict(X)
-y_pred = np.round(y_pred)
-
-from sklearn.metrics import classification_report
-print(classification_report(y, y_pred))
-print(pd.crosstab(y, y_pred))# confusion matrix
-
-print(model.coefs_)
-print(model.intercepts_)
-
-#%%
-from ANNet import ANNet
-import pandas as pd
-import numpy as np
-np.random.seed(4012)
-
-df = pd.read_csv("../Datasets/fin-ratio.csv")
-X = df.drop(columns="HSI")
-y = df["HSI"]
-
-model = ANNet(X, y, size=2, linout=True, max_iter=1000, trial=10)
-y_pred = model.predict(X)
-y_pred = np.round(y_pred)
-
-from sklearn.metrics import classification_report
-print(classification_report(y, y_pred))
-print(pd.crosstab(y, y_pred))		 		# confusion matrix
-print(model.coefs_)							# get weights
-print(model.intercepts_)					# get bias
-
-#%%
-from ANNet import ANNet
-from sklearn.datasets import load_iris
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-np.random.seed(4012)
-
-iris = load_iris()
-X, y = iris.data, iris.target
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=4012)
-
-model = ANNet(X_train, y_train, size=2, linout=False, max_iter=1000, trial=10)
-y_pred = model.predict(X_train)
-
-print(model.loss_)				# Best categorical cross-entropy loss + L2
-enc = OneHotEncoder(handle_unknown='ignore')
-one_hot_y = enc.fit_transform(y_train.reshape(-1, 1)).toarray()
-L2 = 0.0001*(np.sum(model.coefs_[0]**2) + np.sum(model.coefs_[1]**2))
-print((np.sum(-one_hot_y * np.log(model.predict_proba(X_train))) + L2/2) / len(y_train))
-print(pd.crosstab(y_train, y_pred))			# confusion matrix
-print(model.coefs_)							# get weights $\bm{W}^{(1)}, \bm{W}^{(2)}$
-print(model.intercepts_)					# get bias $\bm{b}^{(1)}, \bm{b}^{(2)}$
 
 W1, W2 = model.coefs_
 b1, b2 = model.intercepts_
@@ -98,48 +18,140 @@ print(W2)
 print(b1)
 print(b2)
 
+#%%
 logistic = lambda x: 1/(1 + np.exp(-x))
 
-a1 = logistic(W1 @ X_test.T + b1.reshape(-1, 1))
+X_ = X[[0,50,100]]
+a1 = logistic(W1 @ X_.T + b1.reshape(-1, 1))
 a2 = W2 @ a1 + b2.reshape(-1, 1)
 pr = np.argmax(a2, axis=0) # logistic / np.round(a2[0]) linear
-print(pd.crosstab(y_test, pr))# confusion matrix
 
-y_pred = model.predict(X_test)
-#y_pred = np.round(y_pred) # linear
+print(a1)
+print(a2)
 
-from sklearn.metrics import classification_report
-print(classification_report(y_test, y_pred))
-print(pd.crosstab(y_test, y_pred))# confusion matrix
+#%%
+import pandas as pd
+
+y_pred = model.predict(X)
+y_pred = np.round(y_pred)
+
+print(pd.crosstab(y_pred, y))   # confusion matrix
+
+#%%
+import pandas as pd
+
+df = pd.read_csv("../Datasets/fin-ratio.csv")
+X = df.drop(columns="HSI")
+y = df["HSI"]
+print(X.columns.values)
+
+from sklearn.neural_network import MLPRegressor
+model = MLPRegressor(hidden_layer_sizes=3, max_iter=1000, 
+                     solver="lbfgs", activation="logistic", 
+                     random_state=4002)
+
+model.fit(X, y)
+y_pred = model.predict(X)
+y_pred = y_pred > 0.5
+print(pd.crosstab(y_pred, y))   # confusion matrix
 
 #%%
 from ANNet import ANNet
 import pandas as pd
 import numpy as np
-np.random.seed(560)
-np.random.seed(12966)
+np.random.seed(4002)
 
-df_train = pd.read_csv("../Datasets/fin-ratio_train.csv", index_col=0)
-df_test = pd.read_csv("../Datasets/fin-ratio_test.csv", index_col=0)
-X_train, X_test = df_train.drop(columns="HSI"), df_test.drop(columns="HSI")
-y_train, y_test = df_train["HSI"], df_test["HSI"]
+df = pd.read_csv("../Datasets/fin-ratio.csv")
+X = df.drop(columns="HSI")
+y = df["HSI"]
 
-model = ANNet(X_train, y_train, size=2, linout=False, max_iter=1000, trial=20)
+model = ANNet(X, y, size=3, linout=True, max_iter=1000, trial=10)
+y_pred = model.predict(X)
+y_pred = y_pred > 0.5
 
-print(model.coefs_)
-print(model.intercepts_)
+print(pd.crosstab(y_pred, y))		 		# confusion matrix
+W1, W2 = model.coefs_
+b1, b2 = model.intercepts_
+W1, W2 = W1.T, W2.T
+print(W1)
+print(W2)
+print(b1)
+print(b2)
 
-# training dataset
-y_pred = model.predict(X_train)
-y_pred = np.round(y_pred)
+#%%
+from sklearn.datasets import load_iris
 
-from sklearn.metrics import classification_report
-print(classification_report(y_train, y_pred))
-print(pd.crosstab(y_train, y_pred))# confusion matrix
+iris = load_iris()
+X, y = iris.data, iris.target
+model = ANNet(X, y, size=2, linout=False, max_iter=1000, trial=10)
+y_pred = model.predict(X)
 
-# testing dataset
-y_pred = model.predict(X_test)
-y_pred = np.round(y_pred)
+print(pd.crosstab(y_pred, y))		 		# confusion matrix
+W1, W2 = model.coefs_
+b1, b2 = model.intercepts_
+W1, W2 = W1.T, W2.T
+print(W1)
+print(W2)
+print(b1)
+print(b2)
 
-print(classification_report(y_test, y_pred))
-print(pd.crosstab(y_test, y_pred))# confusion matrix
+#%%
+y_proba = model.predict_proba(X)
+y_pred = np.argmax(y_proba, axis=1)
+print(y_pred)
+
+#%%
+df = pd.read_csv("../Datasets/fin-ratio.csv")
+X = df.drop(columns="HSI")
+y = df["HSI"]
+
+model = ANNet(X, y, size=3, linout=False, max_iter=1000, trial=10)
+y_pred = model.predict(X)
+
+print(pd.crosstab(y_pred, y))		 		# confusion matrix
+W1, W2 = model.coefs_
+b1, b2 = model.intercepts_
+W1, W2 = W1.T, W2.T
+print(W1)
+print(W2)
+print(b1)
+print(b2)
+
+#%%
+import numpy as np
+logistic = lambda x: 1/(1 + np.exp(-x))
+
+X = np.array([[0.4,0.7], [0.8, 0.9], [1.3, 1.8], [-1.3, -0.9]])
+y = np.array([0, 0, 1, 0])              # target value
+
+# hidden layer bias and weights
+W1 = np.array([[0.1,-0.2,0.1], [0.4,0.2,0.9]])
+# output layer bias and weights
+W2 = np.array([[0.2,-0.5,0.1]])
+
+# transpose to fit the input format of ANN
+X1 = np.c_[np.ones(len(y)), X]
+h = logistic(W1 @ X1.T)                 # logistic hidden h'
+h = np.c_[np.ones(len(y)), h.T].T
+o = W2 @ h								# linear output o'
+err = y - o
+print(err)                              # output error
+print(np.mean(err**2))					# mean SSE
+
+#%%
+lr = 0.5                                # learning rate: $\eta$
+n = len(y)
+del2 = -2*err                           # output layer $\delta_2$
+Delta_W2 = -lr*del2 @ h.T               # $\Delta W2 = -\eta \delta_2 (h')^T$
+new_W2 = W2 + Delta_W2 / n              # new output weights: $W2 = W2 + \Delta W2$
+
+del1 = (W2.T @ del2)*h*(1-h)            # hidden layer $\delta_1$
+del1 = del1[1:,]                        # remove from X1
+Delta_W1 = -lr*del1 @ X1                # $\Delta W1 = -\eta \delta_1 x^T$
+new_W1 = W1 + Delta_W1 / n              # new hidden weights: $W1 = W1 + \Delta W1$
+
+new_h = logistic(new_W1 @ X1.T)
+new_h = np.c_[np.ones(len(y)), new_h.T].T
+new_o = new_W2 @ new_h
+new_err = y - new_o
+print(np.mean(new_err**2))              # new mean SSE

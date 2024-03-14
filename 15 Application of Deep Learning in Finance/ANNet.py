@@ -1,6 +1,6 @@
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 
-def ANNet(X, y, size, linout=True, max_iter=1e4, trial=5):
+def ANNet(X, y, size, linout=False, max_iter=1e4, trial=5):
     kwargs = {"hidden_layer_sizes": size, "max_iter": max_iter,
               "solver": "lbfgs", "activation": "logistic"}
     Best_ANN = MLPRegressor(**kwargs) if linout else MLPClassifier(**kwargs)

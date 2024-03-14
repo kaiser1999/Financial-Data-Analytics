@@ -16,48 +16,12 @@ VaR_sim = np.quantile(loss, 0.99) # 1-day 99% V@R
 print(VaR_sim)
 
 #%%
-
-from arch import arch_model
-
-d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0) # read in data file
-t = d["HSBC"]               # select HSBC
-n = len(d)		            # no. of obs
-x_n = t.iloc[-1]            # select the last obs
-ns = n-1                    # number of scenarios
-u = np.array((t-t.shift(1))/t.shift(1))[1:]  # stock returns
-
-# fit the GARCH(1,1) model
-res_HSBC = arch_model(u, mean='Zero', vol='GARCH', p=1, q=1).fit()
-omega, alpha, beta = res_HSBC.params.values
-nu = [omega/(1 - alpha - beta)] # long run variance
-for i in range(1, len(u)):
-    nu.append(omega + alpha*u[i-1]**2 + beta*nu[-1])
-    
-p_0 = 100000                # initial portfolio value
-w_s = p_0/x_n               # shares owned on day n
-
-# Fitted variance on day n 
-var_n = omega + alpha*u[-1]**2 + beta*nu[-1]
-
-t_i = np.array(t[1:ns])
-t_i_1 = np.array(t[0:(ns-1)])
-var_i = nu[1:ns]
-
-h_sim = x_n*(t_i_1+(t_i-t_i_1)*np.sqrt(var_n/var_i))/t_i_1
-
-p_n = h_sim * w_s           # portfolio value
-loss_GARCH = p_0 - p_n      # loss
-VaR_GARCH = np.quantile(loss_GARCH, 0.99)   # 1-day 99% VaR
-print(VaR_GARCH)
-
-#%%
-
-from scipy.optimize import minimize, Bounds
+from scipy.optimize import minimize
+from scipy.optimize import Bounds
 
 # set lower and upper bounds for omega, alpha, beta
-bds = Bounds(lb=[1e-15, 1e-15, 1e-15], ub=[1-1e-15, 1-1e-15, 1-1e-15])
-bds_2 = [(1e-15,1-1e-15),(1e-15,1-1e-15),(1e-15, 1-1e-15)]
-# stationarity constraint: omega + alpha + beta < 1
+bds = Bounds(lb=[1e-15,]*3, ub=[np.inf] + [1-1e-15,]*2)
+# stationarity constraint: alpha + beta < 1
 cons = [{'type': 'ineq', 'fun': lambda x: 1-x[1]-x[2]}]
 
 def GARCH_11(x, r):
@@ -69,37 +33,46 @@ def GARCH_11(x, r):
         log_like -= 1/2*(np.log(2*np.pi) + np.log(nu) + r[i]**2/nu)
     return -log_like
 
-d = pd.read_csv("../Datasets/stock_1999_2002.csv") # read in data file
-t = d["HSBC"]               # select HSBC
-n = len(d)		            # no. of obs
-x_n = t.iloc[-1]            # select the last obs
-ns = n-1                    # number of scenarios
-u = np.array((t-t.shift(1))/t.shift(1))[1:]  # stock returns
-
-# fit the GARCH(1,1) model with two stage optimization
-x0 = [0.05, 0.04, 0.9]
-model1 = minimize(GARCH_11, x0, args=(u), method='L-BFGS-B', bounds=bds, tol=1e-20)
-model2 = minimize(GARCH_11, model1.x, args=(u), method='SLSQP', constraints=cons, bounds=bds_2, tol=1e-20)
-
-omega, alpha, beta = model2.x
-nu = [omega + alpha*np.mean(u**2) + beta*np.mean(u**2)]
-for i in range(1, len(u)):
-    nu.append(omega + alpha*u[i-1]**2 + beta*nu[-1])
+def GARCH_11_MLE(r):
+    x0 = [0.05, 0.04, 0.9]
     
-p_0 = 100000                # initial portfolio value
-w_s = p_0/x_n               # shares owned on day n
+    # two stage optimization: L-BFGS-B only support bounded constraints
+    model1 = minimize(GARCH_11, x0, args=(r), method='L-BFGS-B', 
+                      bounds=bds, tol=1e-20)
+    model2 = minimize(GARCH_11, model1.x, args=(r), method='SLSQP', 
+                      constraints=cons, bounds=bds, tol=1e-20)
+    return model2.x, model2.fun			# negative log-likelihood
 
-# Fitted variance on day n 
-var_n = omega + alpha*u[-1]**2 + beta*nu[-1]
+#%%
+d = pd.read_csv("../Datasets/stock_1999_2002.csv", index_col=0)
+u = np.diff(d, axis=0) / d.iloc[:-1, :] # Arithmetic return
+x_n = d.iloc[-1,:]           # select the last obs
+w = [40000, 30000, 30000]    # investment amount on each stock
+p_0 = sum(w)	             # total investment amount
+w_s = w/x_n                  # no. of shares bought at day n
 
-t_i = np.array(t[1:ns])
-t_i_1 = np.array(t[0:(ns-1)])
-var_i = nu[1:ns]
+model_HSBC, _ = GARCH_11_MLE(u["HSBC"])
+model_CLP, _ = GARCH_11_MLE(u["CLP"])
+model_CK, _ = GARCH_11_MLE(u["CK"])
 
-h_sim = x_n*(t_i_1+(t_i-t_i_1)*np.sqrt(var_n/var_i))/t_i_1
+def Bootstrap_GARCH(model, u, t):
+    omega, alpha, beta = model
+    nu = [omega + alpha*np.mean(u**2) + beta*np.mean(u**2)]
+    for i in range(1, len(u)):
+        nu.append(omega + alpha*u[i-1]**2 + beta*nu[-1])
+    
+    # Fitted variance on day n + 1
+    var_n_1 = omega + alpha*u[-1]**2 + beta*nu[-1]
+    t_i, t_1i, t_n = t[1:].values, t[:-1].values, t[-1]
+    
+    return t_n*(t_1i+(t_i-t_1i)*np.sqrt(var_n_1/nu))/t_1i
 
-p_n = h_sim * w_s           # portfolio value
-loss_GARCH = p_0 - p_n      # loss
+h_sim1 = Bootstrap_GARCH(model_HSBC, u["HSBC"], d["HSBC"])
+h_sim2 = Bootstrap_GARCH(model_CLP, u["CLP"], d["CLP"])
+h_sim3 = Bootstrap_GARCH(model_CK, u["CK"], d["CK"])
+h_sim = np.c_[h_sim1, h_sim2, h_sim3]
+p_n = h_sim @ w_s            # portfolio value at day n
+loss_GARCH = p_0 - p_n       # loss
 VaR_GARCH = np.quantile(loss_GARCH, 0.99)   # 1-day 99% VaR
 print(VaR_GARCH)
 
@@ -191,20 +164,20 @@ plt.axvline(x=-VaR_N, c="green")
 plt.axvline(x=-VaR_t, c="gray")
 plt.axvline(x=-VaR_EVT, c="orange")
 
-plt.text(-VaR_sim, 1.5, "-VaR_sim", ha='center', fontsize="small")
-plt.text(-VaR_GARCH, 1.5, "-VaR_GARCH", ha='center', fontsize="small")
-plt.text(-VaR_N, 15, "-VaR_N", ha='center', fontsize="small")
-plt.text(-VaR_t, 8, "-VaR_t", ha='center', fontsize="small")
-plt.text(-VaR_EVT, 15, "-VaR_EVT", ha='center', fontsize="small")
+plt.text(-VaR_sim, 1.5, "-V@R_sim", ha='center', fontsize="small")
+plt.text(-VaR_GARCH, 1.5, "-V@R_GARCH", ha='center', fontsize="small")
+plt.text(-VaR_N, 15, "-V@R_N", ha='center', fontsize="small")
+plt.text(-VaR_t, 8, "-V@R_t", ha='center', fontsize="small")
+plt.text(-VaR_EVT, 15, "-V@R_EVT", ha='center', fontsize="small")
 
 plt.tight_layout()
 plt.savefig("../Picture/Backtesting VaR.png", dpi=200)
 
 #%%
-
 # expected shortfall
 print(np.mean(loss[loss > VaR_sim]))    # expected shortfall
 print(np.mean(loss[loss > VaR_GARCH]))
+# ES with loss bootstrapped from unequal weight model
 print(np.mean(loss_GARCH[loss_GARCH > VaR_GARCH]))
 
 mu = np.mean(-delta_p)
@@ -224,6 +197,7 @@ EVT = VaR + (beta + xi*(VaR - u))/(1 - xi)
 print(mu + sig*EVT)
 
 # distribution free
+n = len(loss)
 K = int(np.floor(n*0.01))
 sort_loss = np.sort(loss)[::-1]
 Term1 = 1/(0.01*n)*sum(sort_loss[:(K-1)])

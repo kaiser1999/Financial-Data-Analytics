@@ -13,12 +13,6 @@ def MM_quantile(x, q, tol=1e-18, maxit=1e4):
     return mu_new
 
 #%%
-x = [5, 8, 2, 20, 17, 9, 29, 19]
-q = 0.7
-print(np.quantile(x, q))
-print(MM_quantile(x, q))
-
-#%%
 # same as Risk_Measure.py
 import pandas as pd
 import numpy as np

@@ -25,7 +25,6 @@ pc2 %*% pc2
 pc1 %*% pc2
 
 ################################################################################
-
 (s <- pca$sdev)   # Save the s.d. of all PC's to s
 round(s^2, 4)     # Display the variances of all PC"s
 (t <- sum(s^2))   # Compute total variance (should equal 13)
@@ -53,101 +52,67 @@ score <- pca$scores[,1:3]		# save scores of PC1-PC3
 pairs(score)			          # scatterplot of scores
 
 ################################################################################
-
-pr_comp <- function(X, center=TRUE, scale=TRUE, method="SD"){
-  X <- as.matrix(X)
-  N <- nrow(X)
-  feature_name <- colnames(X)
-  ones = rep(1, N)
-  if (center){ X <- X - ones %*% t(colMeans(X))}
-  # rescale with population standard deviation
-  if (scale) { 
-    X <- X %*% diag(1/sqrt(apply(X, 2, var)))
-    X <- X * sqrt(N/(N-1))
-  }
-  matr <- cov(X)
-  if (method=="SD"){           # spectral decomposition
-    eig <- eigen(matr)        
-    loadings <- eig$vectors
-    std <- sqrt(eig$values)
-  }else{                       # singular value decomposition
-    svdcom <- svd(matr)
-    loadings <- svdcom$v
-    std <- sqrt(svdcom$d)
-  }
-  # computing sample standard deviation, different from Python
-  std <- std * sqrt((N-1)/N)
-  rownames(loadings) <- feature_name
-  colnames(loadings) <- paste0("PC", 1:ncol(X))
-  score <- X %*% loadings
-  return (list(loadings=loadings, sdev=std, scores=score))
-}
-
-pca2 <- pr_comp(d)
-all.equal(as.numeric(pca2$sdev), as.numeric(pca$sdev))
+# compute the covariance matrix and extract the variance
+var <- diag(cov(d))
+sqrt(var)
 
 ################################################################################
-
-d <- read.csv("../Datasets/us stocks.csv", header=TRUE, row.names=1)
+df <- read.csv("../Datasets/us_Open_2020H.csv", header=TRUE, row.names=1)
 # Compute daily logarithmic return for each equity
-r <- sapply(d, function(x) diff(log(x)))
-rownames(r) <- rownames(d)[-1]
+r <- sapply(df, function(x) diff(log(x)))
+date <- as.Date(rownames(df), format="%d/%m/%Y")
+r_idx_train <- which(date[-1] < as.Date("2020/04/01"))
+r_train <- r[r_idx_train,]
 
-spx <- read.csv("../Datasets/spx_2020.csv", header=TRUE, row.names=1)
-
-PCA <- prcomp(r)
+PCA <- prcomp(r_train, center=TRUE, scale=FALSE)
 pc1 <- PCA$rotation[,1]        # Save the loading of 1st PC
 
-# Select 10 Equities to invest base on the loadings of PC1
+# Select 10 equities to invest base on the loadings of pc1
 n_stock <- 10
-investment <- 10000
-short_r <- 0.5
-short_interest <- 0.08
-base_fee <- 2.05
+smallest_n <- order(pc1, decreasing=FALSE)[1:n_stock]
+largest_n <- order(pc1, decreasing=TRUE)[1:n_stock]
 
-select_long <- order(pc1, decreasing=FALSE)[1:n_stock]
-sort(pc1, decreasing=FALSE)[1:n_stock]
-select_short <- order(pc1, decreasing=TRUE)[1:n_stock]
-sort(pc1, decreasing=TRUE)[1:n_stock]
+# check which group performs the best with training data
+df_train_last <- tail(r_idx_train, 1) + 1     # add back 1 in r for d
+df[df_train_last, smallest_n] - df[1, smallest_n]
+df[df_train_last, largest_n] - df[1, largest_n]
 
+################################################################################
+# commission and short-selling fees formulas
+# https://www.futuhk.com/en/support/topic2_417?
 library(zoo)
-date <- as.Date(rownames(d), format="%d/%m/%Y")
-equity_price <- as.matrix(d)
-index_price <- as.matrix(spx)
 
-pca_long_n <- floor(investment/equity_price[1, select_long])
-pca_long_remain <- as.numeric(investment*n_stock 
-                              - equity_price[1, select_long] %*% pca_long_n)
-pca_long_com <- sum(sapply(pca_long_n, function(x) max(base_fee, 0.013*x)))
-pca_long_stock <- equity_price[-1, select_long] %*% pca_long_n
-pca_long_val <- zoo(pca_long_stock - pca_long_com + pca_long_remain)
-index(pca_long_val) <- date[-1]
+investment <- 100000
+buy_and_hold <- function(test_price, test_date, n_stock=1){
+  n_units <- floor(investment/n_stock/test_price[1,])
+  commission <- sum(sapply(n_units, function(x) max(2.05, 0.013*x)))
+  stocks_amount <- as.numeric(test_price[1,] %*% n_units)
+  price_path <- test_price %*% n_units
+  remain <- investment - 2*commission
+  values <- zoo(remain + (price_path - stocks_amount))
+  index(values) <- test_date
+  return (values)
+}
 
-pca_short_n <- floor(investment*short_r/equity_price[1, select_short])
-pca_short_remain <- as.numeric(equity_price[1, select_short] %*% pca_short_n)
-pca_short_com <- sum(sapply(pca_short_n, function(x) max(base_fee, 0.013*x)))
-pca_short_stock <- equity_price[-1, select_short] %*% pca_short_n
-short_days <- date[-1] - date[1]
-pca_short_interest <- short_interest * short_days/365 * pca_short_remain
-pca_short_val <- zoo(investment*n_stock + pca_short_remain 
-                     - pca_short_stock - pca_short_com - pca_short_interest)
-index(pca_short_val) <- date[-1]
+spx <- read.csv("../Datasets/SPX_Open_2020H.csv", header=TRUE, row.names=1)
+equity_price <- as.matrix(df[(df_train_last+1):nrow(df),])
+index_price <- as.matrix(spx[(df_train_last+1):nrow(df),])
+test_date <- date[(df_train_last+1):nrow(df)]
 
-market_n <- floor(investment*n_stock/index_price[1,])
-market_remain <- investment*n_stock - index_price[1,]*market_n
-market_com <- max(base_fee, 0.013*market_n)
-market_stock <- market_n*index_price[-1,]
-market_val <- zoo(market_stock + market_remain - market_com)
-index(market_val) <- date[-1]
+pca_bnh_smallest <- buy_and_hold(equity_price[,smallest_n], test_date, 
+                                 n_stock)
+pca_bnh_largest <- buy_and_hold(equity_price[,largest_n], test_date, 
+                                n_stock)
+market_bnh <- buy_and_hold(index_price, test_date, 1)
 
 par(mfrow=c(1,1))
-plot_date <- date[seq(2, nrow(r), 20)]
-plot(pca_long_val, ylim=c(investment*7, investment*14), 
-     col='blue', lwd=2, xaxt="n", ylab="")
-lines(pca_short_val, col='red', lwd=2)
-lines(market_val, col='black', lwd=2)
-legend("topleft", c("PCA long", "PCA short", "S&P500"), 
-       col=c("blue","red","black"), lwd=2)
+plot_date <- test_date[seq(1, length(test_date), 10)]
+plot(pca_bnh_smallest, ylim=c(0.9*investment, 3*investment),
+     col='red', lwd=2, xaxt="n", ylab="")
+lines(pca_bnh_largest, col='blue', lwd=2)
+lines(market_bnh, col='black', lwd=2)
+legend("topleft", c("PCA smallest", "PCA largest", "S&P500"), 
+       col=c("red","blue","black"), lwd=2)
 axis(side=1, plot_date , format(plot_date , "%d-%m-%y"), cex.axis=1)
 
 ################################################################################
@@ -175,10 +140,3 @@ cumsum(s_svd^2/sum(s_svd^2))
 
 pca_sd <- princomp(d_scale)     # run PCA with Spectral Decomposition
 pca_sd$loadings
-
-################################################################################
-pca_sd <- pr_comp(d[1:5], method="SD")
-pca_svd <- pr_comp(d[1:5], method="SVD")
-
-pca_sd <- pr_comp(t(d[1:5]), method="SD")
-pca_svd <- pr_comp(t(d[1:5]), method="SVD")

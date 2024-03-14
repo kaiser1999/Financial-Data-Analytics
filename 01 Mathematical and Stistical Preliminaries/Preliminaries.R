@@ -1,6 +1,7 @@
+#Set directory: Run this on source instead of Console!!
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-############################################################
+################################################################################
 options(digits=4) # Control display into 4 digits
 
 HSI_2002 <- read.csv("../Datasets/fin-ratio.csv")
@@ -13,7 +14,7 @@ X_2002 <- HSI_2002[,1:6] # A 680x6 data matrix
 
 (R_2002 <- cor(X_2002)) # Correlation matrix
 
-############################################################
+################################################################################
 options(digits=4)
 
 det(solve(S_2002))

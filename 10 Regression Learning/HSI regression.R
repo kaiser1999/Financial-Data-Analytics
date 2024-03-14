@@ -4,6 +4,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ################################################################################
 d <- read.csv("../Datasets/fin-ratio.csv")
 summary(lm(HSI~EY+CFTP+ln_MV+DY+BTME+DTE, data=d))
+
+################################################################################
 summary(lm(HSI~EY+CFTP+ln_MV+DY+BTME, data=d))
 
 ################################################################################
@@ -28,6 +30,7 @@ plot(reg$residuals)                   # residuals vs index number
 ################################################################################
 summary(glm(HSI~EY+CFTP+ln_MV+DY+BTME+DTE, data=d, family=binomial))
 
+################################################################################
 lreg <- glm(HSI~EY+CFTP+ln_MV+DY+BTME+DTE, data=d, family=binomial)
 pr <- (lreg$fitted.values > 0.5)      # pr=TRUE if fitted > 0.5
 table(pr, d$HSI)
@@ -37,7 +40,6 @@ table(pr, d$HSI)
 ################################################################################
 par(mfrow=c(1,1))
 ################################################################################
-
 mdist <- function(x) {
   t <- as.matrix(x)                   # transform x to a matrix
   m <- apply(t, 2, mean)              # compute column mean
@@ -64,7 +66,7 @@ dim(d2)                               # throw away 648-626=22 cases
 d3 <- rbind(d1, d2)                   # combine d1 with d2 
 dim(d3)
 # save the cleansed dataset 
-write.csv(d3, file="fin-ratio_cleaned.csv", row.names=FALSE)
+write.csv(d3, file="fin-ratio_cleansed.csv", row.names=FALSE)
 
 ################################################################################
 summary(glm(HSI~CFTP+ln_MV+BTME, data=d3, family=binomial))
@@ -105,7 +107,7 @@ pred <- predict(mnl)                  # prediction
 table(pred, iris$Species)             # tabulate results
 
 ################################################################################
-d3 <- read.csv("fin-ratio_cleaned.csv")		    
+d3 <- read.csv("fin-ratio_cleansed.csv")		    
 lreg <- glm(HSI~., data=d3, binomial) # save the logistic reg
 step(lreg)                            # perform stepwise selection
 

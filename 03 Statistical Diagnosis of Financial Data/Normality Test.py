@@ -63,7 +63,6 @@ print(stats.jarque_bera(u.CK))
 print(JB_test(u.CK))
 
 #%%
-
 def t_QQ_plot(u, color="blue", comp="", ax=None):
     z = u - np.mean(u)              # Remove mean
     sz = np.sort(z)                 # Sort z
@@ -143,7 +142,6 @@ plt.savefig("../Picture/Stock Chi2 Plot.png", dpi=200)
 print(stats.kstest(md2_180, stats.chi2.cdf, args=(3,), method="asymp"))
 
 #%%
-
 print(np.corrcoef(u_180, rowvar=False, ddof=1))
 
 #%%
@@ -219,7 +217,7 @@ for i in range(90):
     s0 = s1
 
 df_pred = pd.DataFrame(np.array(s_pred), 
-                        columns=d.columns.values + "_pred")
+                       columns=d.columns.values + "_pred")
 df_pred.index = np.arange(len(d)+1, len(d)+90+1)
 d.index = np.arange(len(d))
 

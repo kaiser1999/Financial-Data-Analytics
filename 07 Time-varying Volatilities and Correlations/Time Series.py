@@ -35,12 +35,10 @@ omega, alpha, beta = res_HSBC.params.values
 print(omega / (1 - alpha - beta))
 
 #%%
-
 print(res_HSBC.summary())
 #res_HSBC.plot()
 
 #%%
-
 from scipy.optimize import minimize
 from scipy.optimize import Bounds
 
@@ -72,6 +70,9 @@ model_HSBC, llike_HSBC = GARCH_11_MLE(u1)
 print(model_HSBC, llike_HSBC)
 
 #%%
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.graphics.tsaplots import plot_acf
 
 # Residuals u_i/sigma_i ~ N(0, 1)
 omega, alpha, beta = model_HSBC
@@ -80,16 +81,6 @@ for i in range(1, len(u1)):
     nu.append(omega + alpha*u1[i-1]**2 + beta*nu[-1])
 
 resid_HSBC = u1/np.sqrt(nu)
-
-from statsmodels.stats.diagnostic import acorr_ljungbox
-
-print(acorr_ljungbox(u1**2, lags=[15]))
-print(acorr_ljungbox(np.array(resid_HSBC)**2, lags=[15]))
-
-#%%
-import matplotlib.pyplot as plt
-from scipy import stats
-from statsmodels.graphics.tsaplots import plot_acf
 
 fig, axs = plt.subplots(2, 2, figsize=(15,15))
 vol = pd.Series(np.sqrt(nu), index=d.index[1:])
@@ -104,6 +95,11 @@ stats.probplot(resid_HSBC, dist="norm", plot=axs[1,1])
 axs[1,1].set_title("QQ Plot of Standardized Residuals")
 fig.tight_layout()
 fig.savefig("../Picture/HSBC diagnosis.png", dpi=200)
+
+from statsmodels.stats.diagnostic import acorr_ljungbox
+
+print(acorr_ljungbox(u1**2, lags=[15]))
+print(acorr_ljungbox(np.array(resid_HSBC)**2, lags=[15]))
 
 #%%
 sig = pd.Series(np.sqrt(nu), index=d.index[1:])
@@ -120,7 +116,6 @@ fig.tight_layout()
 fig.savefig("../Picture/HSBC GARCH sd.png", dpi=200)
 
 #%%
-
 print(u.iloc[-1, :])
 print(np.corrcoef(u.iloc[-90:, :], rowvar=False))
 print(np.cov(u.iloc[-90:, :], rowvar=False))
@@ -134,7 +129,6 @@ print(test.summary())
 '''
 #%%
 # Numbers in the book
-
 omega, alpha, beta = model_HSBC
 
 print(nu[-1])
@@ -160,7 +154,6 @@ print(np.mean(coef, axis=0))
 
 #%%
 # Numbers in the book
-
 omega, alpha, beta = np.mean(coef, axis=0)
 u1T, u2T, u3T = u.iloc[-1,:]
 Var_MAT = np.cov(u.iloc[-90:, :], rowvar=False)
@@ -257,10 +250,8 @@ model2 = minimize(DCC_GARCH_11, model1.x, args=(eta), method='SLSQP',
                   constraints=DCC_cons, bounds=DCC_bds, tol=1e-20)
 print(model2.x)
 
-
 #%%
 # Example of using R code in Python
-
 from rpy2.robjects.packages import importr
 import rpy2.robjects as robjects
 from rpy2.robjects import numpy2ri

@@ -26,6 +26,7 @@ print(km_iris.labels_)                          # Predicted cluster labels
 print(np.bincount(km_iris.labels_))             # The size of each cluster
 print("Between group sum of squares:", get_bcss(km_iris, X_iris))
 print("Within group sum of squares:", km_iris.inertia_)
+
 #%%
 print(pd.crosstab(km_iris.labels_, y_iris))     # Classification table
 
@@ -100,3 +101,56 @@ for i in range(len(df_cHSI_km2.columns) - 1):
 
 plt.tight_layout()
 plt.savefig("../Picture/HSI_boxplots.png", dpi=200)
+
+#%%
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from KMeansCluster import best_km
+
+df_Cred = pd.read_csv('../Datasets/Credit Card Customer Data.csv')
+df_Cred = df_Cred.drop(['Sl_No', 'Customer Key'], axis=1)
+X = df_Cred.values
+scaler = MinMaxScaler()
+X = scaler.fit_transform(X)
+
+_ , km_cCred2 = best_km(X, 2) # try K = 2
+_ , km_cCred3 = best_km(X, 3) # try K = 3
+_ , km_cCred4 = best_km(X, 4) # try K = 4
+_ , km_cCred5 = best_km(X, 5) # try K = 4
+
+#%%
+plt_cmap = sns.color_palette("viridis", n_colors=3)
+centroids = km_cCred3.cluster_centers_
+
+fig, ax = plt.subplots(figsize=(10, 7))
+# scatter plot w.r.t first two feature variables
+for i in range(len(np.unique(km_cCred3.labels_))):
+    idx = np.where(km_cCred3.labels_ == i)[0]
+    ax.scatter(X[idx,0], X[idx,1], color=plt_cmap[i], s=50, 
+               label=f'Cluster {i+1}')
+plt.scatter(centroids[:, 0], centroids[:, 1], marker='*', c='orange', 
+            s=150)
+plt.legend(fontsize=15)
+plt.xlabel(df_Cred.columns[0], fontsize=15)
+plt.ylabel(df_Cred.columns[1], fontsize=15)
+plt.title('Results of K-means Clustering', fontsize=20)
+
+plt.tight_layout()
+plt.savefig("../Picture/Credit_card_Kmeans.png", dpi=200)
+
+#%%
+df_Cred_km3 = df_Cred.copy()
+df_Cred_km3["Total_interactions"] = (df_Cred["Total_visits_bank"] + 
+                                     df_Cred["Total_visits_online"] + 
+                                     df_Cred["Total_calls_made"])
+df_Cred_km3["clust"] = km_cCred3.predict(X) + 1
+fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(15, 10))
+# boxplots for each variable
+for i in range(len(df_Cred_km3.columns) - 1):
+    j, k = i // 3, i % 3
+    sns.boxplot(data=df_Cred_km3, ax=axs[j,k], palette="viridis", 
+                x="clust", y=df_Cred_km3.columns[i])
+    
+plt.tight_layout()
+plt.savefig("../Picture/Credit_card_HSI_boxplots.png", dpi=200)

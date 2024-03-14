@@ -1,5 +1,7 @@
+#Set directory: Run this on source instead of Console!!
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
+######################################################################
 d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
 d <- as.ts(d)
 
@@ -15,58 +17,34 @@ loss <- p_0 - p_n	            # loss
 (VaR_sim <- quantile(loss, 0.99)) # 1-day 99% V@R
 
 ######################################################################
-
-library(tseries)
-
-d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
-t <- as.ts(d$HSBC)          # select HSBC
-n <- nrow(d)                # no. of obs
-x_n <- t[n]                 # select the last obs
-ns <- n-1                   # number of scenarios
-u <- (lag(t)-t)/t           # stock returns
-
-vol <- garch(u)             # fit the GARCH(1,1) model
-p_0 <- 100000               # initial portfolio value
-w_s <- p_0/x_n              # shares owned on day n
-
-# Fitted variance on day n 
-var.n <- vol$coef[1] + vol$coef[2]*u[length(u)]^2 + 
-  vol$coef[3]*vol$fitted.values[,1][length(u)]^2
-
-t_i <- t[2:ns]
-t_i_1 <- t[1:(ns-1)]
-var.i <- vol$fitted.values[,1][2:ns]^2
-h_sim <- x_n*(t_i_1+(t_i-t_i_1)*sqrt(var.n/var.i))/t_i_1
-
-p_n <- h_sim * w_s          # portfolio value
-loss_GARCH <- p_0 - p_n     # loss
-(VaR_GARCH <- quantile(loss_GARCH, 0.99))   # 1-day 99% VaR
-
-######################################################################
-
-library(fGarch) # load library "fGarch"
+library(fGarch)               # load library "fGarch"
 
 d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1) # read in data file
-t <- as.ts(d$HSBC)          # select HSBC
-n <- nrow(d)                # no. of obs
-x_n <- t[n]                 # select the last obs
-ns <- n-1                   # number of scenarios
-u <- (lag(t)-t)/t           # stock returns
+d <- as.ts(d)
+u <- (lag(d)-d)/d
+colnames(u) <- colnames(d)
+x_n <- as.vector(d[nrow(d),]) # select the last obs
+w <- c(40000, 30000, 30000)   # investment amount on each stock
+p_0 <- sum(w)	                # total investment amount
+w_s <- w/x_n                  # no. of shares bought at day n
 
-var <- garchFit(~garch(1, 1), data=u, include.mean=FALSE)
-p_0 <- 100000               # initial portfolio value
-w_s <- p_0/x_n              # shares owned on day n
+model_HSBC <- garchFit(~garch(1, 1), data=u[,"HSBC"], include.mean=F, trace=F)
+model_CLP <- garchFit(~garch(1, 1), data=u[,"CLP"], include.mean=F, trace=F)
+model_CK <- garchFit(~garch(1, 1), data=u[,"CK"], include.mean=F, trace=F)
 
-# Fitted variance on day n 
-var.n <- coef(var)[1] + coef(var)[2]*u[length(u)]^2 + 
-  coef(var)[3]*var@h.t[length(u)]
+Bootstrap_GARCH <- function(model, u, t){
+  var_n_1 <- coef(model)[1] + coef(model)[2]*u[length(u)]^2 + 
+    coef(model)[3]*model@h.t[length(u)]
+  t_i <- t[-1]; t_1i <- t[-length(t)]; t_n <- t[length(t)]
+  t_n*(t_1i+(t_i-t_1i)*sqrt(var_n_1/model@h.t))/t_1i
+}
 
-t_i <- t[2:ns]
-t_i_1 <- t[1:(ns-1)]
-var.i <- var@h.t[2:ns]
-h_sim <- x_n*(t_i_1+(t_i-t_i_1)*sqrt(var.n/var.i))/t_i_1
+h_sim1 <- Bootstrap_GARCH(model_HSBC, u[,"HSBC"], d[,"HSBC"])
+h_sim2 <- Bootstrap_GARCH(model_CLP, u[,"CLP"], d[,"CLP"])
+h_sim3 <- Bootstrap_GARCH(model_CK, u[,"CK"], d[,"CK"])
+h_sim <- cbind(h_sim1, h_sim2, h_sim3)
 
-p_n <- h_sim * w_s          # portfolio value
+p_n <- h_sim %*% w_s
 loss_GARCH <- p_0 - p_n     # loss
 (VaR_GARCH <- quantile(loss_GARCH, 0.99))   # 1-day 99% VaR
 
@@ -118,7 +96,7 @@ round(1-pbinom(m, 250, 0.01), 4)
 
 ######################################################################
 
-x_n <- as.vector(d[nrow(d),])     # select the last obs
+x_n <- d[nrow(d),]                # select the last obs
 w <- c(40000, 30000, 30000)       # investment amount on each stock
 p_0 <- sum(w)                     # total investment amount
 w_s <- w/x_n                      # no. of shares bought at day n
@@ -143,11 +121,11 @@ abline(v=-VaR_N, col="green")
 abline(v=-VaR_t, col="gray")
 abline(v=-VaR_EVT, col="orange")
 
-text(-VaR_sim, -0.46, "-VaR_sim", col="blue")
-text(-VaR_GARCH, -0.46, "-VaR_GARCH", col="red")
-text(-VaR_N, 15, "-VaR_N", col="green")
-text(-VaR_t, 8, "-VaR_t", col="gray")
-text(-VaR_EVT, 15, "-VaR_EVT", col="orange")
+text(-VaR_sim, -0.46, "-V@R_sim", col="blue")
+text(-VaR_GARCH, -0.46, "-V@R_GARCH", col="red")
+text(-VaR_N, 15, "-V@R_N", col="green")
+text(-VaR_t, 8, "-V@R_t", col="gray")
+text(-VaR_EVT, 15, "-V@R_EVT", col="orange")
 
 ######################################################################
 k <- c(3.4, 3.5, 3.65, 3.75, 3.85, 4)
@@ -174,6 +152,7 @@ mtext(eq, 3, line=-3)
 # expected shortfall
 mean(loss[loss > VaR_sim])
 mean(loss[loss > VaR_GARCH])
+# ES with loss bootstrapped from unequal weight model
 mean(loss_GARCH[loss_GARCH > VaR_GARCH])
 
 mu <- mean(loss)
@@ -190,6 +169,7 @@ EVT <- VaR + (p[2] + p[1]*(VaR - u))/(1 - p[1])
 mu + sig*EVT
 
 # distribution free
+n <- length(loss)
 K <- floor(n*0.01)
 sort_loss <- sort(loss, decreasing=TRUE)
 1/(0.01*n)*sum(sort_loss[1:(K-1)]) + (1-(K-1)/(0.01*n))*sort_loss[K]

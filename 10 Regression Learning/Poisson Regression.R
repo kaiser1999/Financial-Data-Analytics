@@ -1,3 +1,4 @@
+#Set directory: Run this on source instead of Console!!
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ################################################################################

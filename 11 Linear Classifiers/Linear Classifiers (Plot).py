@@ -22,7 +22,7 @@ a2 = np.random.rand(n_data_points)*np.pi+np.pi
 r = np.append(r1, r2)
 a = np.append(a1, a2)
 
-# In order to plot it we convert it to cartesian:
+# In order to plot it we convert it to cartesian: (x_1, x_2) = (x1, y1) for class 1
 x1, y1 = r*np.cos(a), r*np.sin(a)
 
 fig, ax = plt.subplots(figsize=(10, 10))
@@ -45,7 +45,7 @@ a2 = np.random.rand(n_data_points)*np.pi+np.pi
 r = np.append(r1, r2)
 a = np.append(a1, a2)
 
-# In order to plot it we convert it to cartesian:
+# In order to plot it we convert it to cartesian: (x_1, x_2) = (x2, y2) for class 2
 x2, y2 = r*np.cos(a), r*np.sin(a)
 
 plt.scatter(x2, y2, marker='.', linewidths=0.1, c="blue", s=100)
@@ -66,7 +66,7 @@ ax.view_init(15, 35)
 plt.tight_layout()
 plt.savefig("../Picture/SVM_scatter3D.png", dpi=200) # need self crop
 
-fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(14, 7))
+fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(7*3, 7))
 ax1.scatter(x1**2, y1**2, marker='.', linewidths=0.1, c="red", s=100)
 ax1.scatter(x2**2, y2**2, marker='.', linewidths=0.1, c="blue", s=100)
 ax1.set_xlabel(r'$x_1^2$', fontsize=20)
@@ -77,8 +77,15 @@ ax2.scatter(x2**2, np.sqrt(2)*x2*y2, marker='.', linewidths=0.1, c="blue", s=100
 ax2.set_xlabel(r'$x_1^2$', fontsize=20)
 ax2.set_ylabel(r'$\sqrt{2} x_1 x_2$', fontsize=20)
 
+ax3.scatter(y1**2, np.sqrt(2)*x1*y1, marker='.', linewidths=0.1, c="red", s=100)
+ax3.scatter(y2**2, np.sqrt(2)*x2*y2, marker='.', linewidths=0.1, c="blue", s=100)
+ax3.set_xlabel(r'$x_2^2$', fontsize=20)
+ax3.set_ylabel(r'$\sqrt{2} x_1 x_2$', fontsize=20)
+
 plt.tight_layout()
 plt.savefig("../Picture/SVM_scatter rbf.png", dpi=200)
+
+print(1/0)
 
 #%%
 np.random.seed(4002)

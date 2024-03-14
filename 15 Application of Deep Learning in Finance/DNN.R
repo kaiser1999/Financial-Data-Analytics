@@ -35,17 +35,17 @@ d <- read.csv("../Datasets/fin-ratio.csv")
 names(d)
 X <- subset(d, select=-c(HSI)); y <- d$HSI
 set.seed(4002)
-fin.nn <- nnet(X,y,size=2,linout=T,maxit=200)
+fin.nn <- nnet(X,y,size=3,linout=T,maxit=200)
 # set max. number of iterations to 200
 pred <- round(fin.nn$fit)   # round the fitted values
 table(pred, y)              # classification table
 
 ################################################################################
-source("ann.R")
+source("ANNet.R")
 d <- read.csv("../Datasets/fin-ratio.csv")
 X <- subset(d, select=-c(HSI)); y <- d$HSI
 set.seed(4002)
-fin.nn <- ann(X,y,size=2,linout=T,try=10) # 10 trials
+fin.nn <- ANNet(X,y,size=3,linout=T,try=10) # 10 trials
 fin.nn$value                # the best result
 summary(fin.nn)             # the best weights 
 pred <- round(fin.nn$fit)   # round the fitted values
@@ -53,7 +53,7 @@ table(pred, y)              # classification table
 
 ################################################################################
 X <- iris[,1:4]; y <- as.factor(iris[,5])
-iris.nn <- ann(X,y,size=2,maxit=200,try=10)    # 10 trials, logistic
+iris.nn <- ANNet(X,y,size=2,maxit=200,try=10)    # 10 trials, logistic
 iris.nn$value               # best value
 summary(iris.nn)            # display weights
 pred <- max.col(iris.nn$fit)# find column name with max. fitted values
@@ -64,7 +64,7 @@ d <- read.csv("../Datasets/fin-ratio.csv")
 X <- subset(d, select=-c(HSI)); y <- d$HSI
 y <- as.factor(d$HSI)       # y as factor
 set.seed(4002)
-fin.nn <- ann(X,y,size=2,maxit=200,try=10)
+fin.nn <- ANNet(X,y,size=3,maxit=200,try=10)
 fin.nn$value                # best value
 summary(fin.nn)
 pred <- fin.nn$fit > 0.5    # check if it belongs to group 1
@@ -74,7 +74,7 @@ table(pred, y)              # classification table
 logistic <- function(x) 1/(1+exp(-x))
 
 X <- matrix(c(0.4,0.7,0.8,0.9,1.3,1.8,-1.3,-0.9),ncol=2,byrow=T)
-y <- c(0,0,1,0) 				# target value
+y <- c(0, 0, 1, 0)                # target value
 # hidden layer bias and weights
 W1 <- matrix(c(0.1,-0.2,0.1,0.4,0.2,0.9),nrow=2,byrow=T)
 # output layer bias and weights
@@ -95,7 +95,7 @@ Delta_W2 <- -lr*del2 %*% t(h)     # $\Delta W2 = -\eta \delta_2 (h')^T$
 new_W2 <- W2 + Delta_W2 / n       # new output weights: $W2 = W2 + \Delta W2$
 
 del1 <- (t(W2) %*% del2)*h*(1-h)  # hidden layer $\delta_1$
-del1 <- del1[-1,]                 # remove from cbind(1, X)
+del1 <- del1[-1,]                 # remove from X1
 Delta_W1 <- -lr*del1 %*% X1       # $\Delta W1 = -\eta \delta_1 x^T$
 new_W1 <- W1 + Delta_W1 / n       # new hidden weights: $W1 = W1 + \Delta W1$
 

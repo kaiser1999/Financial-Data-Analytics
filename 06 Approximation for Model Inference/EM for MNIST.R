@@ -1,11 +1,10 @@
 #library(tensorflow)
 #install_tensorflow()
 
-library(keras)        # MNIST dataset
-
 ################################################################################
 ### Bernoulli Mixture Model ###
 ################################################################################
+library(keras)        # MNIST dataset
 
 # Load MNIST dataset
 mnist <- dataset_mnist()
@@ -84,7 +83,7 @@ for (it in 1:iter){
   }
   prior <- prior/sum(prior)
   prior_record[,it] <- prior
-}
+} # Iterate for iter =10 times with the following output
 
 ################################################################################
 # Test
@@ -98,6 +97,7 @@ for (n in 1:N_test){
   y_hat[n] <- which.max(y_prob) - 1
 }
 
+################################################################################
 # Table of predictions and prediction accuracy
 table(y_test, y_hat)			              # Confusion matrix
 sum(diag(table(y_test, y_hat)))/N_test	# Accuracy

@@ -25,8 +25,7 @@ legend('topright',legend=c("Pseudo Generator","R Generator"),
        fill=c(rgb(red=0,green=0,blue=1.0,alpha=0.5),
               rgb(red=1.0,green=0,blue=0,alpha=0.5)))
 
-############################################################
-
+################################################################################
 set.seed(4012)
 
 pse_exp_gen <- function(lamb, seed=123456789, 
@@ -48,8 +47,7 @@ legend('topright',legend=c("Pseudo Generator","R Generator"),
        fill=c(rgb(red=0,green=0,blue=1.0,alpha=0.5),
               rgb(red=1.0,green=0,blue=0,alpha=0.5)))
 
-############################################################
-
+################################################################################
 set.seed(4002)
 
 pse_norm_gen <- function(mu=0.0, sigma=1.0, seed=123456789, 

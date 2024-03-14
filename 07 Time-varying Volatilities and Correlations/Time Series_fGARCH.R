@@ -1,7 +1,7 @@
+#Set directory: Run this on source instead of Console!!
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-#############################################################
-
+################################################################################
 library(tseries)
 
 d <- read.csv("../Datasets/stock_1999_2002.csv", row.names=1)
@@ -10,49 +10,42 @@ d <- as.ts(d)
 u <- (lag(d) - d)/d
 colnames(u) <- paste0(colnames(d), "_Return")
 
-#############################################################
-library(zoo)
+################################################################################
+library(xts)
 
-msd <- function(t, w){    # function to compute moving s.d.
-  n <- length(t)-w+1
-  out <- c()
-  for (i in 1:n) {
-    s <- sd(t[i:(i+w-1)]) # compute the sd of t(i) to t(i+w-1)
-    out <- c(out, s)      # append the result to out
-  }
-  zoo(out)                # convert to time series
-}
+u1 <- u[,"HSBC_Return"]; u2 <- u[,"CLP_Return"]; u3 <- u[,"CK_Return"]
+s_HSBC_90 <- xts(rollapply(u1, 90, sd), order.by=date[-c(1:90)])
+s_HSBC_180 <- xts(rollapply(u1, 180, sd), order.by=date[-c(1:180)])
 
-u1 <- u[,"HSBC_Return"]
-u2 <- u[,"CLP_Return"]
-u3 <- u[,"CK_Return"]
-s_HSBC_90 <- msd(u1, 90)	    # compute 90-day moving sd
-index(s_HSBC_90) <- date[(90+1):length(date)]
-s_HSBC_180 <- msd(u1, 180)	  # compute 180-day moving sd
-index(s_HSBC_180) <- date[(180+1):length(date)]
+plot(s_HSBC_90, col="blue", type="l", lwd=2, 
+     main="Simple moving standard deviation of HSBC")
+lines(s_HSBC_180, col="red", type="l", lwd=2)
+addLegend("topright", legend.names=c("s_90", "s_180"), 
+          col=c("blue", "red"), lwd=2)
 
-par(mfrow=c(2, 1), mar=c(4,4,1,1))
-plot(s_HSBC_90, col="blue", xaxt="n")
-plot_date <- index(s_HSBC_90)[seq(1, length(s_HSBC_90), 100)]
-axis(1, at=plot_date, format(plot_date, "%d-%m-%Y"))
+################################################################################
+round(min(s_HSBC_90), 5); round(max(s_HSBC_90), 5)
+sqrt(252) * min(s_HSBC_90); sqrt(252) * max(s_HSBC_90)
 
-plot(s_HSBC_180, col="red", xaxt="n")
-plot_date <- index(s_HSBC_180)[seq(1, length(s_HSBC_180), 100)]
-axis(1, at=plot_date, format(plot_date, "%d-%m-%Y"))
+round(min(s_HSBC_180), 5); round(max(s_HSBC_180), 5)
+sqrt(252) * min(s_HSBC_180); sqrt(252) * max(s_HSBC_180)
 
-############################################################
-
+################################################################################
 library(fGarch) # load library "fGarch"
 
 # GARCH(1,1) on HSBC return
 res_HSBC <- garchFit(~garch(1, 1), data=u1, include.mean=FALSE)
 round(coef(res_HSBC), 6)  # display coefficient in 6 digits
-res_HSBC@fit$llh          # compute log-likelihood value
+res_HSBC@fit$llh          # compute negative log-likelihood value
 
+################################################################################
 res_HSBC@fit$matcoef
 
-############################################################
+################################################################################
+omega <- coef(res_HSBC)[1]; alpha <- coef(res_HSBC)[2]; beta <- coef(res_HSBC)[3]
+omega / (1 - alpha - beta)
 
+################################################################################
 GARCH_11 <- function(para, u){
   u <- as.numeric(u)
   omega0 <- para[1]
@@ -72,14 +65,15 @@ GARCH_11 <- function(para, u){
 
 para <- c(0.3,0.1,0.4)
 self_model <- constrOptim(para, GARCH_11, grad=NULL, u=u1,
-                          method=c("Nelder-Mead"), 
-                          ui=rbind(c(-1,-1,-1), diag(3), -diag(3)), 
-                          ci=c(-1, rep(0, 3), rep(-1, 3)))
+  method="Nelder-Mead", 
+  ui=rbind(c(0,-1,-1), diag(3), -cbind(0, diag(2))), 
+  ci=c(-1, rep(0, 3), rep(-1, 2))
+)
 
 self_model$par
+self_model$value      # negative log-likelihood
 
-############################################################
-
+################################################################################
 omega <- coef(res_HSBC)[1]
 alpha <- coef(res_HSBC)[2]
 beta <- coef(res_HSBC)[3]
@@ -99,28 +93,22 @@ Box.test(resid_HSBC^2, lag=15, type="Ljung")
 par(mfrow=c(2,2), mar=c(4,4,3,3))
 plot(res_HSBC, which=c(2, 5, 11, 13))
 
-############################################################
-
+################################################################################
 par(mfrow=c(1,1))
-vol_HSBC <- zoo(sqrt(res_HSBC@h.t))
-index(vol_HSBC) <- date[-1]
-plot(vol_HSBC, col="blue", lwd=2, ylab="", type="l", 
-     ylim=c(0.01, 0.04), xaxt="n")
-lines(s_HSBC_90, col="red", lwd=2)
-lines(s_HSBC_180, col="green", lwd=2)
-legend(x="topleft", legend=c("nu", "s_90", "s_180"), 
-       col=c("blue", "red", "green"), lwd=2)
-plot_date <- date[seq(2, length(date), 200)]
-axis(1, at=plot_date, format(plot_date, "%d-%m-%Y"))
+vol_HSBC <- xts(sqrt(res_HSBC@h.t), order.by=date[-1])
+plot(vol_HSBC, col="green", lwd=2, ylab="", type="l", 
+     ylim=c(0.01, 0.04), xaxt="n", main="HSBC volatilities")
+lines(s_HSBC_90, col="blue", lwd=2)
+lines(s_HSBC_180, col="red", lwd=2)
+addLegend("topleft", legend.names=c("nu", "s_90", "s_180"), 
+          col=c("green", "blue", "red"), lwd=2)
 
-############################################################
-
+################################################################################
 u[dim(u)[1],]
 cor(u[(dim(u)[1]-89):dim(u)[1],])
 var(u[(dim(u)[1]-89):dim(u)[1],])
 
-############################################################
-
+################################################################################
 res_HSBC <- garchFit(~garch(1, 1), data=u1, include.mean=FALSE)
 res_CLP <- garchFit(~garch(1, 1), data=u2, include.mean=FALSE)
 res_CK <- garchFit(~garch(1, 1), data=u3, include.mean=FALSE)
@@ -128,12 +116,14 @@ res_CK <- garchFit(~garch(1, 1), data=u3, include.mean=FALSE)
 
 round(colMeans(coef), 6) # compute the column mean
 
-############################################################
-test <- garchFit(~garch(1, 1), data=u1, include.mean=FALSE, cond.dist="std")
-plot(test, which=13)
-coef(test)
+################################################################################
+# test <- garchFit(~garch(1, 1), data=u1, include.mean=FALSE, cond.dist="std")
+# plot(test, which=13)
+# coef(test)
 
-############################################################
+################################################################################
+### GJR-GARCH / L-GARCH ###
+################################################################################
 library(rugarch)
 
 gjr_mean_model <- list(armaOrder=c(0,0), include.mean=FALSE)
@@ -150,8 +140,7 @@ colnames(gjr_param) <- c("omega", "alpha", "beta", "theta")
 rownames(gjr_param) <- c("HSBC", "CLP", "CK")
 gjr_param
 
-###########################################################
-
+################################################################################
 omega <- coef(gjr_HSBC)[1]
 alpha <- coef(gjr_HSBC)[2]
 beta <- coef(gjr_HSBC)[3]
@@ -169,6 +158,10 @@ gjr_resid_HSBC <- as.numeric(residuals(gjr_HSBC, standardize=TRUE))
 all.equal(resid_HSBC, gjr_resid_HSBC)
 
 Box.test(gjr_resid_HSBC^2, lag=15, type="Ljung")
+gjr_resid_CLP <- as.numeric(residuals(gjr_CLP, standardize=TRUE))
+Box.test(gjr_resid_CLP^2, lag=15, type="Ljung")
+gjr_resid_CK <- as.numeric(residuals(gjr_CK, standardize=TRUE))
+Box.test(gjr_resid_CK^2, lag=15, type="Ljung")
 
 par(mfrow=c(2,2), mar=c(4,4,3,3))
 plot(gjr_HSBC@fit$sigma, type="l")
@@ -176,7 +169,9 @@ acf(gjr_resid_HSBC)
 acf(gjr_resid_HSBC^2)
 plot(gjr_HSBC, which=9)
 
-###########################################################
+################################################################################
+### E-GARCH ###
+################################################################################
 e_mean_model <- list(armaOrder=c(0,0), include.mean=FALSE)
 e_var_model <- list(model="eGARCH", garchOrder=c(1,1))
 e_spec <- ugarchspec(mean.model=e_mean_model,
@@ -191,8 +186,7 @@ colnames(e_param) <- c("omega", "alpha", "beta", "gamma")
 rownames(e_param) <- c("HSBC", "CLP", "CK")
 e_param
 
-###########################################################
-
+################################################################################
 omega <- coef(e_HSBC)[1]
 alpha <- coef(e_HSBC)[2]
 beta <- coef(e_HSBC)[3]
@@ -218,7 +212,8 @@ acf(e_resid_HSBC)
 acf(e_resid_HSBC^2)
 plot(e_HSBC, which=9)
 
-###########################################################
+################################################################################
+library(zoo)
 
 #residuals(gjr_HSBC, standardize=TRUE)
 gjr_vol_HSBC <- zoo(gjr_HSBC@fit$sigma)
@@ -247,7 +242,7 @@ index(d_HSBC) <- date[-1]
 plot(d_HSBC, col="blue", lwd=2, type="l", xaxt="n")
 axis(1, at=plot_date, format(plot_date, "%d-%m-%Y"))
 
-###########################################################
+################################################################################
 library(rmgarch)
 
 garch_mean_model <- list(armaOrder=c(0,0), include.mean=FALSE)
@@ -262,7 +257,7 @@ dcc_spec <- dccspec(uspec=dcc_mult_spec, dccOrder=c(1,1),
 dcc_GARCH <- dccfit(spec=dcc_spec, data=u)
 coef(dcc_GARCH)
 
-###########################################################
+################################################################################
 library(rugarch)
 
 garch_mean_model <- list(armaOrder=c(0,0), include.mean=FALSE)
@@ -278,6 +273,7 @@ resid_CLP <- as.numeric(residuals(garch_CLP, standardize=TRUE))
 resid_CK <- as.numeric(residuals(garch_CK, standardize=TRUE))
 eta <- cbind(resid_HSBC, resid_CLP, resid_CK)
 
+################################################################################
 sigma <- cbind(garch_HSBC@fit$sigma, garch_CLP@fit$sigma, garch_CK@fit$sigma)
 bar_Sigma <- cov(eta)
 
@@ -302,7 +298,7 @@ all(check_R==1)
 dcc_GARCH@mfit$Q[[1]]
 bar_Sigma
 
-############################################################
+################################################################################
 DCC_GARCH_11 <- function(para, Q, eta){
   theta_1 <- para[1]
   theta_2 <- para[2]
@@ -330,39 +326,31 @@ self_model <- constrOptim(para, DCC_GARCH_11, grad=NULL, Q=Q, eta=eta,
 
 self_model$par
 
-############################################################
-
+################################################################################
 n <- 180
 u_180 <- tail(u, n)
 mu_180 <- apply(u_180, 2, mean)
 S_180 <- cov(u_180)
 
 z_180 <- sweep(u_180, 2, mu_180)
-d2_180 <- diag(z_180 %*% solve(S_180) %*% t(z_180))
-sd2_180 <- sort(d2_180)		# sort d2 in ascendingly
-i <- ((1:n)-0.5)/n		# create percentile vector
-q <- qchisq(i,3)		# compute quantiles 
+md2_180 <- rowSums((z_180 %*% solve(S_180)) * z_180)
+smd2_180 <- sort(md2_180)		# sort md2 in ascendingly
+i <- ((1:n)-0.5)/n          # create percentile vector
+q <- qchisq(i,3)		        # compute quantiles
 
-par(mfrow=c(1,1))
-qqplot(q, sd2_180, main="Chi2 Q-Q Plot")		# QQ-chisquare plot
-abline(lsfit(q, sd2_180))	
+par(mfrow=c(1,2))
+qqplot(q, smd2_180, main="Chi2 Q-Q Plot")
+qqline(smd2_180, distribution=function(p) qchisq(p, df=3))
 
-############################################################
-
-d2 <- as.numeric()
-n <- nrow(u)
-ns <- 180
-for (i in 1:n){
+md2_DCC <- c()
+for (i in 1:nrow(u)){
   D <- diag(sigma[i,])
   R <- dcc_GARCH@mfit$R[[i]]
   H <- D %*% R %*% D
-  if (i > n-ns){d2 <- c(d2, u[i,] %*% solve(H) %*% u[i,])}
+  md2_DCC <- c(md2_DCC, u[i,] %*% solve(H) %*% u[i,])
 }
 
-sort_d2 <- sort(d2)
-i <- ((1:ns)-0.5)/ns		    # create percentile vector
-q <- qchisq(i, ncol(eta))		# compute quantiles 
-
-par(mfrow=c(1,1))
-qqplot(q, sort_d2, main="Chi2 Q-Q Plot under DCC")	# QQ-chisquare plot
-abline(lsfit(q, sort_d2))	
+smd2_180_DCC <- sort(tail(md2_DCC, n))
+qqplot(q, smd2_180_DCC, main="Chi2 Q-Q Plot under DCC", 
+       ylim=c(0,14))
+qqline(smd2_180_DCC, distribution=function(p) qchisq(p, df=3))

@@ -12,12 +12,6 @@ MM_quantile <- function(x, q, tol=1e-10, maxit=1e4){
 }
 
 ################################################################################
-x <- c(5, 8, 2, 20, 17, 9, 29, 19)
-q <- 0.7
-quantile(x, q)
-MM_quantile(x, q)
-
-################################################################################
 # same as Risk_Measure.R
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 

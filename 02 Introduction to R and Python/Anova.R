@@ -96,18 +96,18 @@ n_FTSE <- length(Chosen_FTSE$log_return)
 (df <- length(AllIndex$log_return) - 3)
 (Within_group_MSE <- (SSE_SPX + SSE_HSI + SSE_FTSE) / df)
 
-# Harmonic mean used for the two sample sizes
-SPX_HSI_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_SPX + 1/n_HSI)))
-FTSE_SPX_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_SPX)))
-FTSE_HSI_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_HSI)))
+SPX_HSI_SE_ANOVA <- sqrt(Within_group_MSE * (1/n_SPX + 1/n_HSI))
+FTSE_SPX_SE_ANOVA <- sqrt(Within_group_MSE * (1/n_FTSE + 1/n_SPX))
+FTSE_HSI_SE_ANOVA <- sqrt(Within_group_MSE * (1/n_FTSE + 1/n_HSI))
 
-SPX_vs_HSI <- abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA
-FTSE_vs_SPX <- abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA
-FTSE_vs_HSI <- abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA
+# q_Tukey = sqrt(2) t
+SPX_vs_HSI <- abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA * sqrt(2)
+FTSE_vs_SPX <- abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA * sqrt(2)
+FTSE_vs_HSI <- abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA * sqrt(2)
 
-1 - ptukey(q=SPX_vs_HSI, nmeans=3, df=df)
-1 - ptukey(q=FTSE_vs_SPX, nmeans=3, df=df)
-1 - ptukey(q=FTSE_vs_HSI, nmeans=3, df=df)
+ptukey(q=SPX_vs_HSI, nmeans=3, df=df, lower.tail=FALSE)
+ptukey(q=FTSE_vs_SPX, nmeans=3, df=df, lower.tail=FALSE)
+ptukey(q=FTSE_vs_HSI, nmeans=3, df=df, lower.tail=FALSE)
 
 ################################################################################
 ### from 2018 to 2020 ###
@@ -168,15 +168,15 @@ n_FTSE <- length(Chosen_FTSE$log_return)
 (df <- length(AllIndex$log_return) - 3)
 (Within_group_MSE <- (SSE_SPX + SSE_HSI + SSE_FTSE) / df)
 
-# Harmonic mean used for the two sample sizes
-SPX_HSI_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_SPX + 1/n_HSI)))
-FTSE_SPX_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_SPX)))
-FTSE_HSI_SE_ANOVA <- sqrt(Within_group_MSE / (2/(1/n_FTSE + 1/n_HSI)))
+SPX_HSI_SE_ANOVA <- sqrt(Within_group_MSE * (1/n_SPX + 1/n_HSI))
+FTSE_SPX_SE_ANOVA <- sqrt(Within_group_MSE * (1/n_FTSE + 1/n_SPX))
+FTSE_HSI_SE_ANOVA <- sqrt(Within_group_MSE * (1/n_FTSE + 1/n_HSI))
 
-SPX_vs_HSI <- abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA
-FTSE_vs_SPX <- abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA
-FTSE_vs_HSI <- abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA
+# q_Tukey = sqrt(2) t
+SPX_vs_HSI <- abs(mu_SPX - mu_HSI) / SPX_HSI_SE_ANOVA * sqrt(2)
+FTSE_vs_SPX <- abs(mu_FTSE - mu_SPX) / FTSE_SPX_SE_ANOVA * sqrt(2)
+FTSE_vs_HSI <- abs(mu_FTSE - mu_HSI) / FTSE_HSI_SE_ANOVA * sqrt(2)
 
-1 - ptukey(q=SPX_vs_HSI, nmeans=3, df=df)
-1 - ptukey(q=FTSE_vs_SPX, nmeans=3, df=df)
-1 - ptukey(q=FTSE_vs_HSI, nmeans=3, df=df)
+ptukey(q=SPX_vs_HSI, nmeans=3, df=df, lower.tail=FALSE)
+ptukey(q=FTSE_vs_SPX, nmeans=3, df=df, lower.tail=FALSE)
+ptukey(q=FTSE_vs_HSI, nmeans=3, df=df, lower.tail=FALSE)
