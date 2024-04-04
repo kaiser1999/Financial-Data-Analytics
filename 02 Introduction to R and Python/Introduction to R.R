@@ -14,7 +14,7 @@ write.csv(data, "../Datasets/fin-ratio_new.csv")
 ################################################################################
 # Assign data to x except the label y = HSI stock or not
 x <- data[-ncol(data)]
-# Compute sample means and sample variances for each columns
+# Compute sample means and sample variances for each column
 apply(x, MARGIN=2, FUN=mean)
 apply(x, MARGIN=2, FUN=var)
 
