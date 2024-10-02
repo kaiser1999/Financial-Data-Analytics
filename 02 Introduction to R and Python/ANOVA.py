@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.rc('font', size=20); plt.rc('axes', titlesize=30, labelsize=30)
+plt.rc('xtick', labelsize=25); plt.rc('ytick', labelsize=25)
+
 #%%
 SPX = pd.read_csv("../Datasets/SPX.csv", index_col=0)
 HSI = pd.read_csv("../Datasets/HSI.csv", index_col=0)
@@ -15,9 +18,7 @@ SPX["log_return"] = np.log(SPX.Price) - np.log(SPX.Price.shift(1))
 HSI["log_return"] = np.log(HSI.Price) - np.log(HSI.Price.shift(1))
 FTSE["log_return"] = np.log(FTSE.Price) - np.log(FTSE.Price.shift(1))
 
-SPX = SPX.iloc[1:]
-HSI = HSI.iloc[1:]
-FTSE = FTSE.iloc[1:]
+SPX, HSI, FTSE = SPX.iloc[1:], HSI.iloc[1:], FTSE.iloc[1:]
 
 def Remove_Outlier(index, outlier_factor=1.5):
     q25 = np.quantile(index.log_return, q=0.25)
@@ -46,38 +47,45 @@ Chosen_SPX = SPX[SPX.Year.isin(Chosen_Year)]
 Chosen_HSI = HSI[HSI.Year.isin(Chosen_Year)]
 Chosen_FTSE = FTSE[FTSE.Year.isin(Chosen_Year)]
 
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20,7))
-ax1.set_title("SPX daily log-return." + year_name)
-ax2.set_title("HSI daily log-return." + year_name)
-ax3.set_title("FTSE daily log-return." + year_name)
-ax1.hist(Chosen_SPX.log_return, bins="sturges", ec='black')
-ax2.hist(Chosen_HSI.log_return, bins="sturges", ec='black')
-ax3.hist(Chosen_FTSE.log_return, bins="sturges", ec='black')
-plt.tight_layout()
-fig.savefig(f"../Picture/Index log_return histogram {start_year}_{end_year}.png", dpi=200)
+for idx, Chosen_idx in zip(["SPX", "HSI", "FTSE"], 
+                           [Chosen_SPX, Chosen_HSI, Chosen_FTSE]):
+    fig, ax = plt.subplots(1, 1, figsize=(10,10))
+    ax.set_title(f"{idx} daily log-return." + year_name)
+    ax.hist(Chosen_idx.log_return, bins="sturges", ec='black')
+    
+    fig.tight_layout()
+    fig.savefig(f"../Picture/{idx} log_return histogram {start_year}_{end_year}.png", dpi=200)
 
 #%%
 import seaborn as sns
 import scipy.stats as stats
 from statsmodels.stats.multicomp import MultiComparison
 
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22,7))
+fig, ax = plt.subplots(1, 1, figsize=(11,10))
 plt.subplots_adjust(wspace=0.4)      # horizontal spacing between plots
-ax1.set_title("Boxplot." + year_name, fontsize=20)
-ax1.set_xlabel("Location", fontsize=15)
-ax1.set_ylabel("Daily log-return", fontsize=15)
-ax1.boxplot([Chosen_SPX.log_return, Chosen_HSI.log_return, Chosen_FTSE.log_return],
-            widths=0.7, labels=["SPX", "HSI", "FTSE"])
+ax.set_title("Boxplot." + year_name)
+ax.set_xlabel("Location")
+ax.set_ylabel("Daily log-return")
+ax.boxplot([Chosen_SPX.log_return, Chosen_HSI.log_return, 
+            Chosen_FTSE.log_return],
+           widths=0.7, labels=["SPX", "HSI", "FTSE"])
+
+fig.tight_layout()
+fig.savefig(f"../Picture/Boxplot {start_year}_{end_year}.png", dpi=200)
 
 Chosen_SPX.loc[:, "Index"] = "SPX"
 Chosen_HSI.loc[:, "Index"] = "HSI"
 Chosen_FTSE.loc[:, "Index"] = "FTSE"
 AllIndex = pd.concat([Chosen_SPX, Chosen_HSI, Chosen_FTSE])
 
-sns.pointplot(x='Index', y="log_return", data=AllIndex, ci=95, ax=ax2)
-ax2.set_title("Mean Plot with 95% CI." + year_name, fontsize=20)
-ax2.set_xlabel("Index", fontsize=15)
-ax2.set_ylabel("Daily log-return", fontsize=15)
+fig, ax = plt.subplots(1, 1, figsize=(11,10))
+sns.pointplot(x='Index', y="log_return", data=AllIndex, ci=95, ax=ax)
+ax.set_title("Mean Plot with 95% CI." + year_name)
+ax.set_xlabel("Index")
+ax.set_ylabel("Daily log-return")
+
+fig.tight_layout()
+fig.savefig(f"../Picture/Meanplot {start_year}_{end_year}.png", dpi=200)
 
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
@@ -90,12 +98,13 @@ comp = MultiComparison(data=AllIndex.log_return, groups=AllIndex.Index,
 TurkeyHSD_result = comp.tukeyhsd()
 print(TurkeyHSD_result)
 
-TurkeyHSD_result.plot_simultaneous(figsize=(22, 7), ax=ax3)
-ax3.title.set_fontsize(20)
-ax3.set_xlabel("Daily log-return", fontsize=15)
-ax3.set_ylabel("Index", fontsize=15)
-plt.tight_layout()
-fig.savefig(f"../Picture/Boxplot, Meanplot, Tukey HSD {start_year}_{end_year}.png", dpi=200)
+fig, ax = plt.subplots(1, 1, figsize=(11,10))
+TurkeyHSD_result.plot_simultaneous(figsize=(11, 10), ax=ax)
+ax.set_xlabel("Daily log-return")
+ax.set_ylabel("Index")
+
+fig.tight_layout()
+fig.savefig(f"../Picture/Tukey HSD {start_year}_{end_year}.png", dpi=200)
 
 #%%
 mu_SPX = np.mean(Chosen_SPX.log_return)
@@ -142,38 +151,44 @@ Chosen_SPX = SPX[SPX.Year.isin(Chosen_Year)]
 Chosen_HSI = HSI[HSI.Year.isin(Chosen_Year)]
 Chosen_FTSE = FTSE[FTSE.Year.isin(Chosen_Year)]
 
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20,7))
-ax1.set_title("SPX daily log-return." + year_name)
-ax2.set_title("HSI daily log-return." + year_name)
-ax3.set_title("FTSE daily log-return." + year_name)
-ax1.hist(Chosen_SPX.log_return, bins="sturges", ec='black')
-ax2.hist(Chosen_HSI.log_return, bins="sturges", ec='black')
-ax3.hist(Chosen_FTSE.log_return, bins="sturges", ec='black')
-plt.tight_layout()
-fig.savefig(f"../Picture/Index log_return histogram {start_year}_{end_year}.png", dpi=200)
+for idx, Chosen_idx in zip(["SPX", "HSI", "FTSE"], 
+                           [Chosen_SPX, Chosen_HSI, Chosen_FTSE]):
+    fig, ax = plt.subplots(1, 1, figsize=(10,10))
+    ax.set_title(f"{idx} daily log-return." + year_name)
+    ax.hist(Chosen_idx.log_return, bins="sturges", ec='black')
+    
+    fig.tight_layout()
+    fig.savefig(f"../Picture/{idx} log_return histogram {start_year}_{end_year}.png", dpi=200)
 
 #%%
 import seaborn as sns
 import scipy.stats as stats
 from statsmodels.stats.multicomp import MultiComparison
 
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22,7))
+fig, ax = plt.subplots(1, 1, figsize=(11,10))
 plt.subplots_adjust(wspace=0.4)      # horizontal spacing between plots
-ax1.set_title("Boxplot." + year_name, fontsize=20)
-ax1.set_xlabel("Location", fontsize=15)
-ax1.set_ylabel("Daily log-return", fontsize=15)
-ax1.boxplot([Chosen_SPX.log_return, Chosen_HSI.log_return, Chosen_FTSE.log_return],
-            widths=0.7, labels=["SPX", "HSI", "FTSE"])
+ax.set_title("Boxplot." + year_name)
+ax.set_xlabel("Location")
+ax.set_ylabel("Daily log-return")
+ax.boxplot([Chosen_SPX.log_return, Chosen_HSI.log_return, Chosen_FTSE.log_return],
+           widths=0.7, labels=["SPX", "HSI", "FTSE"])
+
+fig.tight_layout()
+fig.savefig(f"../Picture/Boxplot {start_year}_{end_year}.png", dpi=200)
 
 Chosen_SPX.loc[:, "Index"] = "SPX"
 Chosen_HSI.loc[:, "Index"] = "HSI"
 Chosen_FTSE.loc[:, "Index"] = "FTSE"
 AllIndex = pd.concat([Chosen_SPX, Chosen_HSI, Chosen_FTSE])
 
-sns.pointplot(x='Index', y="log_return", data=AllIndex, ci=95, ax=ax2)
-ax2.set_title("Mean Plot with 95% CI." + year_name, fontsize=20)
-ax2.set_xlabel("Index", fontsize=15)
-ax2.set_ylabel("Daily log-return", fontsize=15)
+fig, ax = plt.subplots(1, 1, figsize=(11,10))
+sns.pointplot(x='Index', y="log_return", data=AllIndex, ci=95, ax=ax)
+ax.set_title("Mean Plot with 95% CI." + year_name)
+ax.set_xlabel("Index")
+ax.set_ylabel("Daily log-return")
+
+fig.tight_layout()
+fig.savefig(f"../Picture/Meanplot {start_year}_{end_year}.png", dpi=200)
 
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
@@ -186,12 +201,13 @@ comp = MultiComparison(data=AllIndex.log_return, groups=AllIndex.Index,
 TurkeyHSD_result = comp.tukeyhsd()
 print(TurkeyHSD_result)
 
-TurkeyHSD_result.plot_simultaneous(figsize=(22, 7), ax=ax3)
-ax3.title.set_fontsize(20)
-ax3.set_xlabel("Daily log-return", fontsize=15)
-ax3.set_ylabel("Index", fontsize=15)
-plt.tight_layout()
-fig.savefig(f"../Picture/Boxplot, Meanplot, Tukey HSD {start_year}_{end_year}.png", dpi=200)
+fig, ax = plt.subplots(1, 1, figsize=(11,10))
+TurkeyHSD_result.plot_simultaneous(figsize=(11, 10), ax=ax)
+ax.set_xlabel("Daily log-return")
+ax.set_ylabel("Index")
+
+fig.tight_layout()
+fig.savefig(f"../Picture/Tukey HSD {start_year}_{end_year}.png", dpi=200)
 
 #%%
 mu_SPX = np.mean(Chosen_SPX.log_return)

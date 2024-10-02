@@ -49,16 +49,15 @@ Chosen_SPX <- SPX[SPX$Year %in% Chosen_Year,]
 Chosen_HSI <- HSI[HSI$Year %in% Chosen_Year,]
 Chosen_FTSE <- FTSE[FTSE$Year %in% Chosen_Year,]
 
-par(mfrow=c(1,3))
-hist(Chosen_SPX$log_return, breaks=20, xlab="SPX", cex.lab=1.5, cex.axis=1.5,
-     cex.main=1.5, main=paste0("SPX daily log-return.", year_name))
-hist(Chosen_HSI$log_return, breaks=20, xlab="HSI", cex.lab=1.5, cex.axis=1.5,
-     cex.main=1.5, main=paste0("HSI daily log-return.", year_name))
-hist(Chosen_FTSE$log_return, breaks=20, xlab="FTSE", cex.lab=1.5, cex.axis=1.5,
-     cex.main=1.5, main=paste0("FTSE daily log-return.", year_name))
+par(cex.lab=2.5, cex.axis=2, cex.main=2.5, mar=c(5,5,4,4))
+hist(Chosen_SPX$log_return, breaks=20, xlab="SPX", 
+     main=paste0("SPX daily log-return.", year_name))
+hist(Chosen_HSI$log_return, breaks=20, xlab="HSI", 
+     main=paste0("HSI daily log-return.", year_name))
+hist(Chosen_FTSE$log_return, breaks=20, xlab="FTSE", 
+     main=paste0("FTSE daily log-return.", year_name))
 
 ################################################################################
-par(mfrow=c(1,3))
 boxplot(Chosen_SPX$log_return, Chosen_HSI$log_return, Chosen_FTSE$log_return, 
         names=c("SPX", "HSI", "FTSE"), xlab="Index", ylab="Daily log-return",
         frame=FALSE, col=c("#00AFBB", "#E7B800", "#FC4E07"), boxwex=0.75,
@@ -121,16 +120,14 @@ Chosen_SPX <- SPX[SPX$Year %in% Chosen_Year,]
 Chosen_HSI <- HSI[HSI$Year %in% Chosen_Year,]
 Chosen_FTSE <- FTSE[FTSE$Year %in% Chosen_Year,]
 
-par(mfrow=c(1,3))
-hist(Chosen_SPX$log_return, breaks=20, xlab="SPX", cex.lab=1.5, cex.axis=1.5,
-     cex.main=1.5, main=paste0("SPX daily log-return.", year_name))
-hist(Chosen_HSI$log_return, breaks=20, xlab="HSI", cex.lab=1.5, cex.axis=1.5,
-     cex.main=1.5, main=paste0("HSI daily log-return.", year_name))
-hist(Chosen_FTSE$log_return, breaks=20, xlab="FTSE", cex.lab=1.5, cex.axis=1.5,
-     cex.main=1.5, main=paste0("FTSE daily log-return.", year_name))
+hist(Chosen_SPX$log_return, breaks=20, xlab="SPX", 
+     main=paste0("SPX daily log-return.", year_name))
+hist(Chosen_HSI$log_return, breaks=20, xlab="HSI", 
+     main=paste0("HSI daily log-return.", year_name))
+hist(Chosen_FTSE$log_return, breaks=20, xlab="FTSE", 
+     main=paste0("FTSE daily log-return.", year_name))
 
 ################################################################################
-par(mfrow=c(1,3))
 boxplot(Chosen_SPX$log_return, Chosen_HSI$log_return, Chosen_FTSE$log_return, 
         names=c("SPX", "HSI", "FTSE"), xlab="Index", ylab="Daily log-return",
         frame=FALSE, col=c("#00AFBB", "#E7B800", "#FC4E07"), boxwex=0.75,
