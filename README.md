@@ -1,7 +1,8 @@
 # Financial-Data-Analytics
-This is the repository to all the R and Python codes for the book — 
+This is the repository to the R and Python codes of Chapters 1 and 2 for the book — 
 Financial Data Analytics with Machine Learning, Optimization and Statistics
 Yongzhao Chen, Ka Chun Cheung, Kaiser Fan, Phillip Yam
+For other chapters, please refer to https://www.sta.cuhk.edu.hk/scpy/
 
 ## Datasets
 1. **ATT**
