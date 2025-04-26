@@ -1,6 +1,6 @@
 # Financial-Data-Analytics
 This is the repository to the R and Python codes of Chapters 1 and 2 for the book — 
-Financial Data Analytics with Machine Learning, Optimization and Statistics (Wiley Finance) 1st Edition
+[Financial Data Analytics with Machine Learning, Optimization and Statistics (Wiley Finance Series) 1st Edition](https://www.wiley.com/en-us/Financial+Data+Analytics+with+Machine+Learning%2C+Optimization+and+Statistics-p-9781119863397)
 Yongzhao Chen (Author), Ka Chun Cheung (Author), Kaiser Fan (Co-Author), Phillip Yam (Author)
 
 For other chapters, please refer to https://www.sta.cuhk.edu.hk/scpy/
