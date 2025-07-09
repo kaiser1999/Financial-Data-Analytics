@@ -1,6 +1,7 @@
 # Financial-Data-Analytics
 This repository contains the R and Python code for **Chapters 1 and 2** of the book:
 [Financial Data Analytics with Machine Learning, Optimization and Statistics (Wiley Finance Series) 1st Edition](https://www.wiley.com/en-us/Financial+Data+Analytics+with+Machine+Learning%2C+Optimization+and+Statistics-p-9781119863397)
+
 Authors: Yongzhao Chen, Ka Chun Cheung, Kaiser Fan (Co-Author), Phillip Yam
 
 To access the code for **Chapters 3 to 15**, please download the password-protected archive: **_03 - 15 Financial Data Analytics.7z_**. The password will be sent to you after completing the [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSf5P0s1q0RVoUvv-za0bQbjIIPbQWvxN3uAslLNQR2KLVMvEA/viewform?usp=header). We recommend using **7-Zip** to extract the archive with the password.
