@@ -4,6 +4,8 @@ This repository contains the R and Python code for **Chapters 1 and 2** of the b
 
 Authors: Yongzhao Chen, Ka Chun Cheung, Kaiser Fan (Co-Author), Phillip Yam
 
+To access the code for **Chapters 3 to 15**, please download the corresponding password-protected archives (**.7z**). The passwords will be sent to you after completing the [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSf5P0s1q0RVoUvv-za0bQbjIIPbQWvxN3uAslLNQR2KLVMvEA/viewform?usp=header). We recommend using **7-Zip** to extract the archives with the password.
+
 ## Datasets
 1. **_ATT_**
 
