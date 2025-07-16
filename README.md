@@ -4,7 +4,35 @@ This repository contains the R and Python code for **Chapters 1 and 2** of the b
 
 Authors: Yongzhao Chen, Ka Chun Cheung, Kaiser Fan (Co-Author), Phillip Yam
 
-To access the code for **Chapters 3 to 15**, please download the corresponding password-protected archives (**.7z**). The passwords will be sent to you after completing the [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSf5P0s1q0RVoUvv-za0bQbjIIPbQWvxN3uAslLNQR2KLVMvEA/viewform?usp=header). We recommend using **7-Zip** to extract the archives with the password.
+To access the code for **Chapters 3 to 15**, please download the corresponding password-protected archives (**.7z**). The passwords will be sent to you after completing the corresponding Google Form:
+
+1. [03 Statistical Diagnosis of Financial Data.7z](https://docs.google.com/forms/d/e/1FAIpQLSfNwsdbVQwjOW69wPaTBCV9cTjI8u29gX3Td6wlDE6Ks4M3LQ/viewform?usp=dialog)
+
+2. [04 Financial Forensics.7z](https://docs.google.com/forms/d/e/1FAIpQLScWFldF5qGcF-IZ3QuLDOWocAU420_JklnnYW4ybpgRDRsWFg/viewform?usp=dialog)
+
+3. [05 Numerical Finance.7z](https://docs.google.com/forms/d/e/1FAIpQLScndd8c2LBD4satmM5AAudR1tB1XluFa58-n-Cc0JghC5QwMg/viewform?usp=dialog)
+
+4. [06 Approximation for Model Inference.7z](https://docs.google.com/forms/d/e/1FAIpQLSce8Rp1E0lPIBY38RtsBxx5JaMXqOTT2eS8kJWI5TKFvqdFLw/viewform?usp=dialog)
+
+5. [07 Time-varying Volatilities and Correlations.7z](https://docs.google.com/forms/d/e/1FAIpQLSdYtE0qwAbMB-0yBhG1EesYMklhHcm0oYLigL0vQhXc22H_-Q/viewform?usp=dialog)
+
+6. [08 Risk Measures, Extreme Values, and Copulas.7z](https://docs.google.com/forms/d/e/1FAIpQLSe-rcpRYTevzzD4JMukWnFtF25ZV2uniUeAMjdE8iJp1HbvRQ/viewform?usp=dialog)
+
+7. [09 Principal Component Analysis and Recommender Systems.7z](https://docs.google.com/forms/d/e/1FAIpQLSdwLqnLILydxxF_pAqNnBg9TST5KrOm61y_Qkx7tQ0HjAeTwg/viewform?usp=dialog)
+
+8. [10 Regression Learning.7z](https://docs.google.com/forms/d/e/1FAIpQLSfGwmZSn33SOSIdVddMw8t92VG3FXk2_5_N1jko8juhrJUt2g/viewform?usp=dialog)
+
+9. [11 Linear Classifiers.7z](https://docs.google.com/forms/d/e/1FAIpQLSdMDmxhMtE8WAF02hicQ9qyMfYjoBRGcnR94y8Bd2FSuruWFg/viewform?usp=dialog)
+
+10. [12 Bayesian Learning.7z](https://docs.google.com/forms/d/e/1FAIpQLSckeQsS06UimVHjCfcKRcUKbnd_4FjynAlyi1yQztV1pk77qA/viewform?usp=dialog)
+
+11. [13 Classification and Regression Trees and Random Forests.7z](https://docs.google.com/forms/d/e/1FAIpQLSdqkkbck9V60JXwhvx8yywX4ApcFvNz6BfNh-5Pl6GzEyt8dQ/viewform?usp=dialog)
+
+12. [14 Cluster Analysis.7z](https://docs.google.com/forms/d/e/1FAIpQLSfso7l9_MILL51QoPprOxH6XFOVleH-XjftYaGOxo5r1jYqWA/viewform?usp=dialog)
+
+13. [15 Application of Deep Learning in Finance.7z](https://docs.google.com/forms/d/e/1FAIpQLScdu1POgGJbtp5adtB6qNpZRFgLvGgl6wZsCb8ruunPl17RBA/viewform?usp=dialog)
+
+We recommend using **7-Zip** to extract the archives with the password.
 
 ## Datasets
 1. **_ATT_**
